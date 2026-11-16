@@ -2,7 +2,7 @@
 // sinon l'erreur est remontée ET signalée à l'interface (aucune perte silencieuse).
 
 const DB_NAME = 'appli-forme';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // v2 : ajout du magasin « sleep »
 export const STORES = {
   kv: { keyPath: 'k' },
   days: { keyPath: 'date' },
@@ -13,6 +13,7 @@ export const STORES = {
   workouts: { keyPath: 'id', autoIncrement: true, indexes: ['date'] },
   exstate: { keyPath: 'ex' },
   adjustments: { keyPath: 'id', autoIncrement: true, indexes: ['date'] },
+  sleep: { keyPath: 'date' },
 };
 
 let dbp = null;
@@ -101,6 +102,7 @@ export async function exportAll({ includePhotos = false } = {}) {
 export function validateBackup(obj) {
   if (!obj || obj.app !== 'appli-forme' || !obj.data || typeof obj.data !== 'object') throw new Error('Ce fichier n\'est pas une sauvegarde de l\'appli.');
   if (obj.format > 1) throw new Error('Sauvegarde créée par une version plus récente de l\'appli : mets l\'appli à jour.');
+  // Les sauvegardes d'une version antérieure n'ont pas toutes les sections : on les accepte.
   for (const [s, rows] of Object.entries(obj.data)) {
     if (!STORES[s]) throw new Error(`Section inconnue dans la sauvegarde : ${s}`);
     if (!Array.isArray(rows)) throw new Error(`Section invalide : ${s}`);
@@ -112,7 +114,7 @@ export function validateBackup(obj) {
 export async function importAll(obj) {
   validateBackup(obj);
   const photos = obj.data.photos ? await Promise.all(obj.data.photos.map(async (p) => ({ ...p, blob: await dataURLToBlob(p.blob) }))) : null;
-  const stores = Object.keys(STORES).filter((s) => s !== 'photos' || photos);
+  const stores = Object.keys(STORES).filter((s) => (s !== 'photos' || photos) && (s in obj.data || s === 'photos'));
   return write(stores, (t) => {
     for (const s of stores) {
       const os = t.objectStore(s);

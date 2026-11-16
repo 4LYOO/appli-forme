@@ -1,5 +1,6 @@
 // Petits utilitaires d'interface, sans framework.
 import { SOURCES, NIVEAUX } from './data/sources.js';
+import { icon } from './icons.js';
 
 /** h('div.card#id', {onclick}, enfants…) */
 export function h(sel, props, ...children) {
@@ -42,6 +43,7 @@ export function clear(el) { while (el.firstChild) el.firstChild.remove(); return
 // ---------- Bandeaux et messages ----------
 export function toast(msg, { action, onAction, ms = 3500 } = {}) {
   const host = document.getElementById('toasts');
+  host.replaceChildren(); // un seul message à la fois
   const t = h('div.toast', { role: 'status' }, h('span', msg),
     action && h('button.toast-action', { onclick: () => { onAction?.(); t.remove(); } }, action));
   host.append(t);
@@ -66,7 +68,7 @@ export function sheet(title, content, { full = false, onClose } = {}) {
   const close = () => { wrap.classList.remove('open'); setTimeout(() => wrap.remove(), 200); onClose?.(); };
   const body = h('div.sheet-body');
   const panel = h(`div.sheet${full ? '.sheet-full' : ''}`, { role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
-    h('div.sheet-head', h('h2', title), h('button.icon-btn', { 'aria-label': 'Fermer', onclick: close }, '×')),
+    h('div.sheet-head', h('h2', title), h('button.icon-btn', { 'aria-label': 'Fermer', onclick: close }, icon('close'))),
     body);
   const wrap = h('div.sheet-wrap', { onclick: (e) => { if (e.target === wrap) close(); } }, panel);
   append(body, [typeof content === 'function' ? content(close) : content]);

@@ -92,3 +92,13 @@ export async function habitsForSlot(slot, limit = 4) {
 export async function logAdjustment(title, text, kind = 'info') {
   await db.put('adjustments', { date: todayISO(), ts: Date.now(), kind, title, text });
 }
+
+// ---------- Sommeil ----------
+export async function getNight(date) { return db.get('sleep', date); }
+
+/** Enregistre des nuits importées (une par date : remplace l'existante). */
+export async function saveNights(nights) {
+  const ops = nights.map((n) => ['sleep', 'put', { ...n, importedAt: Date.now() }]);
+  ops.push(['kv', 'put', { k: 'lastSleepImport', v: new Date().toISOString() }]);
+  await db.batch(ops);
+}

@@ -4,7 +4,7 @@
 > Ce document est la référence du projet. Il est tenu à jour à chaque phase.
 > En cas de conflit entre les chiffres de la section « Fonctionnalités » et ceux de la section « Exigence de qualité et base scientifique », **cette dernière prévaut** (voir aussi RECHERCHE.md).
 
-Statut : **phase 1 + musculation livrées, en test sur iPhone** (voir §10).
+Statut : **v1.1 (refonte suite aux retours du 16/11) en test sur iPhone** (voir §10).
 
 ---
 
@@ -16,7 +16,7 @@ Statut : **phase 1 + musculation livrées, en test sur iPhone** (voir §10).
 - Journée type : départ 7h, retour 19h (train, sans voiture). Petit-déjeuner avant de partir, déjeuner 12h-13h (préparé à l'avance), dîner vers 20h. Coucher visé entre 21h30 et 22h30, réveil vers 6h, objectif 7h30 de sommeil (→ extinction vers 22h30 au plus tard).
 - Sport : possible le week-end ; en semaine, au mieux 15-20 min entre 19h et 20h.
 - Aucun matériel, pas de salle.
-- Sommeil difficile, suivi dans une AUTRE web app (journal de sommeil), séparée, qui exporte en CSV.
+- Sommeil difficile, suivi dans une AUTRE web app (journal de sommeil), séparée, qui exporte chaque nuit sous forme de note texte (voir D26).
 - Pas de Mac : uniquement un iPhone 15 Pro et Claude Code.
 
 ## 2. Contraintes techniques
@@ -41,7 +41,7 @@ Statut : **phase 1 + musculation livrées, en test sur iPhone** (voir §10).
 3. **Repas** : matin, midi, soir et collations (vers 10h, 16h, avant le coucher). Saisie rapide : favoris en un tap avec macros précalculées, recettes préparées à l'avance, base locale d'aliments végétariens (extrait Ciqual ANSES en JSON), portions simples. Barres de progression calories et protéines. Liste d'aliments riches en calories et d'idées de collations à emporter.
 4. **Poids** : pesée du matin, courbe avec moyenne sur 7 jours, tendance hebdomadaire.
 5. **Musculation à la maison sans matériel** : full body au poids du corps, 2 séances le week-end (40-50 min) + mini-séance facultative de 15-20 min en semaine selon le score. Bibliothèque d'exercices avec consignes, niveaux de progression (pompes inclinées → pompes → pompes déclinées → pompes archer, etc.), minuteur de repos, historique, ≈ 10 séries par groupe musculaire et par semaine au départ. Saisie après chaque série : répétitions faites + répétitions en réserve (RIR) en un tap. Retour par muscle après la séance (congestion, courbatures, douleur articulaire). Prévoir l'ajout futur de matériel (élastiques, barre de traction, haltères).
-6. **Import du sommeil** : CSV du journal de sommeil, colonnes reconnues par leur nom (en-tête + 2 lignes d'exemple : **[à fournir]**), sans doublons (une nuit par date ; une réimportation remplace), date du dernier import visible, rappel d'import hebdomadaire. Pas de saisie du sommeil ici (hormis la qualité en un tap du questionnaire si la nuit n'est pas importée). Alimente score du jour, autorégulation, corrélations, et quelques conseils issus de la TCC-I.
+6. **Import du sommeil** : note texte du journal de sommeil collée dans l'appli, champs reconnus par leur libellé (voir D26), sans doublons (une nuit par date ; une réimportation remplace), date du dernier import visible, rappel d'import hebdomadaire. Pas de saisie du sommeil ici (hormis la qualité en un tap du questionnaire si la nuit n'est pas importée). Alimente score du jour, autorégulation, corrélations, et quelques conseils issus de la TCC-I.
 7. **Discipline** : « journée minimale » (3 repas + 1 collation + questionnaire) pour garder la série même les mauvais jours ; un jour manqué ne remet pas la série à zéro ; intentions de mise en œuvre (« s'il est 16h, je prends ma collation ») ; bilan du dimanche (tendance du poids, dépense estimée, moyennes calories et protéines, séances faites, sommeil moyen, ajustements de la semaine, UN conseil prioritaire). Jamais de ton culpabilisant.
 8. **Rappels** : v1 = guide intégré pour créer des automatisations Raccourcis iOS (heure fixe → notification qui ouvre l'URL de la bonne page, ex. `?page=collation`). Plus tard : vraies notifications Web Push via Cloudflare Workers + cron (à proposer quand la v1 sera stable).
    Rappels voulus : petit-déjeuner 6h30, collation 10h, collation 16h, dîner 20h, collation avant le coucher à 21h30, pesée le matin (6h), séances samedi et dimanche à 10h (heure par défaut, modifiable dans le profil), import du sommeil et bilan le dimanche soir.
@@ -55,6 +55,14 @@ Statut : **phase 1 + musculation livrées, en test sur iPhone** (voir §10).
   - **préparations** : un plat cuisiné à l'avance, saisi une fois (paquets entiers), puis « 1 portion » en un tap.
 - **Photo du plat** : jointe au repas (stockée localement), affichée dans la journée et sur les favoris. La reconnaissance automatique par IA demanderait un serveur et une clé d'API payante : proposée plus tard (phase 3), pas en v1.
 - Justification : la méthode adaptative calibre la dépense sur la façon de saisir ; une saisie régulière et approximative vaut mieux qu'une saisie précise mais irrégulière (RECHERCHE.md §1).
+
+### Retours de l'utilisateur après le 1er essai (16/11/2026)
+- « Pas ergonomique, mal adapté à l'iPhone » → précisé : **trop de défilement** et **ajout de repas pénible**.
+- « Tout est éparpillé, j'ai été perdu au lancement ».
+- Design apprécié, mais **turquoise au lieu de vert-citron** et **effet verre (Liquid Glass)**, plus pro.
+- **Photo des plats** : « je prends en photo, j'indique ce que c'est et ça l'enregistre ».
+- Objectifs : gardés tels quels.
+- Journal de sommeil : il exporte une **note texte** (pas un CSV), format « Nuit se terminant le JJ/MM/AAAA » + lignes « libellé : valeur ».
 
 ## 5. Règles scientifiques (détail et niveaux de preuve dans RECHERCHE.md)
 - Prise de poids cible ≈ 0,25 à 0,5 % du poids/semaine, surplus 10-20 % au-dessus de la maintenance ; débutant : haut de fourchette acceptable ; surveiller le tour de taille.
@@ -105,11 +113,14 @@ Statut : **phase 1 + musculation livrées, en test sur iPhone** (voir §10).
 | D19 | **Volume** : séance A (sam.) et B (dim.) ≈ 21 séries chacune en super-séries (A1/A2…), mini-séance 6 séries. ≈ 8-11 séries par grand muscle avec 1 mini-séance. Ajustement après chaque séance : ±1-2 séries sur l'exercice principal du muscle, pour la prochaine séance du même type (2 à 6 séries par exercice). | RP-like à petits pas. |
 | D20 | **Rappels** : une notification Raccourcis ne peut pas ouvrir l'appli installée (un lien s'ouvre dans Safari, dont les données sont séparées). → Le guide conseille une simple notification, et l'appli met en avant la prise du moment quand on l'ouvre. Les liens `?page=` restent disponibles pour les futures notifications Web Push. | Limite d'iOS. |
 | D21 | **Base d'aliments provisoire** : ciqual.anses.fr était en maintenance le 16/11/2026 → 136 aliments végétariens avec des valeurs moyennes proches de Ciqual, saisies à la main et vérifiées (cohérence 4/4/9 kcal par g). Signalé dans l'appli. À remplacer par l'extrait officiel en phase 2. | Ne pas bloquer la v1. |
+| D22 | **Design « verre liquide »** : fond sombre avec halos turquoise/bleu fixes, cartes translucides à liseré lumineux, barre d'onglets flottante floutée, feuilles floutées, icônes au trait (style SF Symbols), accent turquoise `#3EE0D0`. Flou réservé à la barre d'onglets, aux feuilles et aux bandeaux (fluidité). | Demande de l'utilisateur. |
+| D23 | **Aujourd'hui = une seule action** : carte « Maintenant » (check-in le matin, puis la prochaine prise avec Photo / Ajouter et les habitudes en 1 tap), 2 anneaux (calories, protéines), la journée en une ligne de 7 pastilles, une ligne de score, un conseil. Le check-in s'ouvre dans une feuille. Carte « Comment ça marche » à la 1re ouverture. | « Trop de défilement », « perdu au lancement ». |
+| D24 | **Ajout de repas sans onglets ni panier par défaut** : photo en haut, recherche, puis « Mes plats » (vignettes photo, 1 tap = enregistré), estimation rapide (1 tap), assiettes types (1 tap par taille). Le panier n'apparaît que si l'on compose avec des aliments. Annuler toujours possible ; quantité réelle ajustable après coup (×0,5 à ×2). | « Ajout de repas pénible ». |
+| D25 | **Photo → nom → enregistré** : la photo est prise d'abord, on tape ce que c'est, on choisit une quantité (plat connu, estimation ou assiette) ; le plat est mémorisé avec sa photo dans « Mes plats » et revient en 1 tap. Pas de reconnaissance automatique (IA) en v1. | Demande de l'utilisateur. |
+| D26 | **Import du sommeil par note texte collée** (Plus → Sommeil, ou depuis le check-in) : calcul du temps de sommeil, du temps au lit, de l'efficacité, prise d'un produit, conditions ; qualité 1-5 = impression générale, −1 si < 6 h, −1 si efficacité < 75 %. Une nuit importée remplace la question « nuit » du check-in. Rappel si pas d'import depuis 7 jours. | Format réel du journal. |
 | D14 | Écriture IndexedDB **vérifiée** (transaction `oncomplete`), bandeau d'erreur rouge persistant sinon ; vérification au démarrage que le stockage est persistant, avec avertissement si refusé (sur iOS, l'installation sur l'écran d'accueil est nécessaire). | « Aucune perte silencieuse ». |
 
 ## 9. Points ouverts
-- En-tête du CSV du journal de sommeil + 2 lignes d'exemple (pour la phase 2).
-- Couleur d'accent : vert-citron `#C6F432` par défaut ; à revoir une fois l'appli en main.
 - Heure des séances du week-end : 10h par défaut, à confirmer.
 
 ## 10. Avancement
@@ -118,5 +129,6 @@ Statut : **phase 1 + musculation livrées, en test sur iPhone** (voir §10).
 | 0 | PWA (manifest, service worker hors ligne), IndexedDB vérifiée, tests Node, déploiement GitHub Actions → Pages | ✅ |
 | 1 | Configuration, Aujourd'hui (questionnaire, score, objectifs, prochain repas, journée minimale, intention, conseil), Repas (portions visuelles, assiettes types, estimation rapide, habitudes, favoris, préparations, photo), Poids (tendance, 7 j, rythme, courbe), Sauvegarde (export/import, rappel hebdo), « Pourquoi ? », guide Raccourcis, historique des ajustements | ✅ |
 | 1b | Séance : programme A/B/mini, 11 exercices à niveaux, saisie répétitions + RIR, minuteur, retour par muscle, volume par muscle, progression automatique, mobilité 10 min | ✅ |
-| 2 | Dépense adaptative dans l'appli (le calcul est déjà écrit et simulé), diagnostic de stagnation, import du sommeil, bilan du dimanche, mensurations et photos de composition, Ciqual officiel | à faire |
+| 1.1 | Refonte : verre liquide turquoise, Aujourd'hui en une action, ajout de repas en 1 tap, photo → nom → plat mémorisé, import de la note de sommeil | ✅ |
+| 2 | Dépense adaptative dans l'appli (le calcul est déjà écrit et simulé), diagnostic de stagnation, corrélations sommeil, bilan du dimanche, mensurations et photos de composition, Ciqual officiel | à faire |
 | 3 | Corrélations personnelles, horaires de rappel adaptés, Web Push (Cloudflare Workers), reconnaissance des plats par photo (option) | à faire |

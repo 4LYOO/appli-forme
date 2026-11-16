@@ -2,8 +2,11 @@
 import * as db from './db.js';
 import { h, banner, removeBanner, clear, toast } from './ui.js';
 import { todayISO, diffDays, relativeDays } from './lib/dates.js';
+import { ICONS } from './icons.js';
 
-export const APP_VERSION = '1.0.0';
+document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = ICONS[el.dataset.icon]; });
+
+export const APP_VERSION = '1.1.0';
 
 const VIEWS = {
   aujourdhui: () => import('./views/today.js'),
@@ -98,6 +101,11 @@ export async function updateGlobalBanners() {
   await db.kvSet('persist', { ...p, usage: undefined, checked: Date.now() }).catch(() => {});
   if (p.supported && !p.persisted && isStandalone) {
     banner('persist', { text: 'iOS n\'a pas (encore) accordé le stockage persistant. Sauvegarde chaque semaine pour ne rien perdre.' });
+  }
+
+  const lastSleep = await db.kvGet('lastSleepImport');
+  if (lastSleep && diffDays(lastSleep.slice(0, 10), todayISO()) >= 7) {
+    banner('sleep', { text: 'Pas d\'import de sommeil depuis une semaine.', action: 'Importer', onAction: () => go('plus', { section: 'sommeil' }) });
   }
 
   const last = await db.kvGet('lastBackup');
