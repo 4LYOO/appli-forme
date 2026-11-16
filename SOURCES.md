@@ -261,14 +261,6 @@ C'est le volume total de la semaine par muscle qui compte, pas le jour où il es
 - Pelland et al., 2024
 - Schoenfeld, Grgic & Krieger, 2019
 
-## Reconnaissance par photo (IA)
-*Preuve faible* · identifiant `ia_photo`
-
-L'IA reconnaît bien QUELS aliments sont sur la photo, mais estime les QUANTITÉS à environ 20 à 30 % près (une photo ne montre pas l'épaisseur ni l'huile cachée). Vérifie les portions d'un coup d'œil. Comme pour l'estimation rapide, la régularité compte plus que la précision : ta dépense calculée s'ajuste à ta façon de noter.
-
-- Études de validation de l'estimation de portions par photo : erreurs typiques de 20 à 40 %
-- Valeurs de l'appli (proches de Ciqual) utilisées quand l'aliment est reconnu
-
 ## Code-barres et Open Food Facts
 *Preuve modérée* · identifiant `off`
 

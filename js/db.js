@@ -95,7 +95,6 @@ export async function exportAll({ includePhotos = false } = {}) {
   for (const s of Object.keys(STORES)) {
     if (s === 'photos' && !includePhotos) continue;
     let rows = await getAll(s);
-    if (s === 'kv') rows = rows.filter((r) => r.k !== 'aiKey'); // la clé d'API ne quitte jamais l'appareil
     if (s === 'photos') rows = await Promise.all(rows.map(async (p) => ({ ...p, blob: await blobToDataURL(p.blob) })));
     data[s] = rows;
   }
@@ -118,12 +117,10 @@ export async function importAll(obj) {
   validateBackup(obj);
   const photos = obj.data.photos ? await Promise.all(obj.data.photos.map(async (p) => ({ ...p, blob: await dataURLToBlob(p.blob) }))) : null;
   const stores = Object.keys(STORES).filter((s) => (s !== 'photos' || photos) && (s in obj.data || s === 'photos'));
-  const keep = await get('kv', 'aiKey'); // la clé d'API n'est pas dans les sauvegardes : on la garde
   return write(stores, (t) => {
     for (const s of stores) {
       const os = t.objectStore(s);
       os.clear();
-      if (s === 'kv' && keep) os.put(keep);
       for (const row of (s === 'photos' ? photos : obj.data[s] || [])) os.put(row);
     }
   }, 'restauration');

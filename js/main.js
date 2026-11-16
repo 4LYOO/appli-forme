@@ -6,7 +6,7 @@ import { ICONS } from './icons.js';
 
 document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = ICONS[el.dataset.icon]; });
 
-export const APP_VERSION = '1.4.0';
+export const APP_VERSION = '1.5.0';
 
 const VIEWS = {
   aujourdhui: () => import('./views/today.js'),
@@ -142,6 +142,7 @@ document.addEventListener('visibilitychange', () => {
   else if (Date.now() - hiddenAt > 5 * 60 * 1000 && !document.querySelector('.sheet-wrap')) refresh();
 });
 
+db.kvGet('aiKey').then((k) => k && db.del('kv', 'aiKey')).catch(() => {}); // reconnaissance IA payante retirée (v1.5) : on efface une éventuelle clé
 route().then(updateGlobalBanners).catch((e) => {
   document.getElementById('view').textContent = `Impossible de démarrer : ${e.message}`;
 });

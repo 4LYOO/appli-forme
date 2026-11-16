@@ -7,7 +7,6 @@ import { getProfile, getTargets, saveNights } from '../state.js';
 import { parseSleepNotes, fmtDuration } from '../lib/sleep.js';
 import { EQUIPMENT } from '../data/exercises.js';
 import { reviewSheet } from './review.js';
-import { MODELS } from '../lib/vision.js';
 import { addDays, mondayOf } from '../lib/dates.js';
 import { go, refresh, updateGlobalBanners, APP_VERSION } from '../main.js';
 
@@ -24,9 +23,6 @@ export async function render(root, params) {
     h('div.section-title', 'Bilans de la semaine'),
     h('div.list', [0, 1, 2, 3].map((k) => { const mon = addDays(mondayOf(todayISO()), -7 * k); return h('button.list-item', { onclick: () => reviewSheet(addDays(mon, 6) > todayISO() ? todayISO() : addDays(mon, 6)) },
       h('span.grow', k === 0 ? 'Cette semaine' : `Semaine du ${shortDate(mon)}`), h('span.chev', '›')); })),
-
-    h('div.section-title#ia', 'Reconnaissance des plats'),
-    await aiCard(),
 
     h('div.section-title#materiel', 'Matériel'),
     await equipmentCard(),
@@ -188,29 +184,3 @@ async function equipmentCard() {
     h('span.grow', e.label, h('br'), h('span.small.muted', e.hint)))));
 }
 
-async function aiCard() {
-  const key = await db.kvGet('aiKey', '');
-  const model = await db.kvGet('aiModel', 'claude-opus-5-5');
-  const status = h('p.small', key ? '✓ Activée : la photo d\'un repas est analysée automatiquement.' : 'Désactivée. Le code-barres (Open Food Facts) marche sans rien configurer.');
-  const input = h('input.input', { type: 'password', placeholder: 'sk-ant-…', value: key, autocomplete: 'off', autocapitalize: 'off', spellcheck: false });
-  return h('div.card.stack',
-    status,
-    h('p.small.muted', 'L\'IA (Claude, d\'Anthropic) reconnaît chaque aliment sur la photo (ex. croissant + compote + café au lait), estime les quantités et lit la marque si elle est visible. Il faut une clé d\'API (console.anthropic.com → API Keys) : c\'est payant à l\'usage, séparément de ton abonnement Claude.'),
-    h('label.field', h('span', 'Clé d\'API'), input),
-    h('label.field', h('span', 'Modèle'), h('select.input', { onchange: async (e) => { await db.kvSet('aiModel', e.target.value).catch(() => {}); toast('Modèle enregistré'); } },
-      MODELS.map((m) => h('option', { value: m.id, selected: m.id === model }, `${m.label} · ≈ ${String(m.costPerPhoto).replace('.', ',')} $ / photo`)))),
-    h('div.btn-row',
-      h('button.btn.btn-primary', { onclick: async () => {
-        const v = input.value.trim();
-        if (v && !v.startsWith('sk-ant-')) { toast('Une clé d\'API commence par « sk-ant- »'); return; }
-        try {
-          await db.kvSet('aiKey', v);
-          if (!v) { toast('IA désactivée'); refresh(); return; }
-          const { testKey } = await import('../ai.js');
-          await testKey(); toast('Clé valide ✓'); refresh();
-        } catch (e) { toast(`Clé enregistrée mais le test a échoué : ${e.message}`, { ms: 7000 }); }
-      } }, 'Enregistrer'),
-      key ? h('button.btn', { onclick: async () => { await db.kvSet('aiKey', ''); toast('Clé supprimée'); refresh(); } }, 'Supprimer') : null),
-    h('p.tiny.muted', 'La clé reste sur cet iPhone et n\'est jamais mise dans les sauvegardes. Les photos analysées sont envoyées à Anthropic pour l\'analyse. Conseil : fixe une limite de dépense mensuelle sur console.anthropic.com (ex. 5 $).'),
-    why(['ia_photo', 'off']));
-}

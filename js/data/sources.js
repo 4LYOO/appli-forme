@@ -167,11 +167,6 @@ export const SOURCES = {
     text: 'C\'est le volume total de la semaine par muscle qui compte, pas le jour où il est fait. La mini-séance de semaine cible donc les muscles qui ont le plus de retard sur leurs ≈ 10 séries.',
     refs: ['Pelland et al., 2024', 'Schoenfeld, Grgic & Krieger, 2019'],
   },
-  ia_photo: {
-    title: 'Reconnaissance par photo (IA)', niveau: 'faible',
-    text: 'L\'IA reconnaît bien QUELS aliments sont sur la photo, mais estime les QUANTITÉS à environ 20 à 30 % près (une photo ne montre pas l\'épaisseur ni l\'huile cachée). Vérifie les portions d\'un coup d\'œil. Comme pour l\'estimation rapide, la régularité compte plus que la précision : ta dépense calculée s\'ajuste à ta façon de noter.',
-    refs: ['Études de validation de l\'estimation de portions par photo : erreurs typiques de 20 à 40 %', 'Valeurs de l\'appli (proches de Ciqual) utilisées quand l\'aliment est reconnu'],
-  },
   off: {
     title: 'Code-barres et Open Food Facts', niveau: 'modere',
     text: 'Le code-barres donne le produit exact (marque, recette) et les valeurs de son étiquette, saisies par les contributeurs d\'Open Food Facts. C\'est la saisie la plus précise pour un produit emballé. Le produit est ensuite gardé sur ton iPhone et reste disponible hors ligne.',

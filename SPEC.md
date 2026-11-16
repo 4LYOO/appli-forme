@@ -4,7 +4,7 @@
 > Ce document est la référence du projet. Il est tenu à jour à chaque phase.
 > En cas de conflit entre les chiffres de la section « Fonctionnalités » et ceux de la section « Exigence de qualité et base scientifique », **cette dernière prévaut** (voir aussi RECHERCHE.md).
 
-Statut : **v1.4 — reconnaissance des aliments par photo et code-barres** (voir §10).
+Statut : **v1.5 — 100 % gratuit** (voir §10).
 
 ---
 
@@ -20,6 +20,7 @@ Statut : **v1.4 — reconnaissance des aliments par photo et code-barres** (voir
 - Pas de Mac : uniquement un iPhone 15 Pro et Claude Code.
 
 ## 2. Contraintes techniques
+- **Aucun coût** : aucune fonction payante (pas d'API payante, pas de serveur payant). Hébergement GitHub Pages et données Open Food Facts gratuits.
 - PWA installable sur l'écran d'accueil de l'iPhone (manifest, service worker, hors ligne), hébergée gratuitement sur GitHub Pages depuis ce dépôt, déployée par GitHub Actions.
 - HTML/CSS/JavaScript vanilla en modules ES, sans framework et si possible sans étape de build.
 - Données 100 % locales dans IndexedDB, avec `navigator.storage.persist()`. Export/import JSON complet, rappel de sauvegarde chaque semaine, date de la dernière sauvegarde toujours visible. **Aucune perte de données silencieuse** : tout échec d'enregistrement est affiché clairement.
@@ -130,7 +131,7 @@ Statut : **v1.4 — reconnaissance des aliments par photo et code-barres** (voir
 | D35 | **Créneaux sautés** : collation sautée > 60 % des jours (sur ≥ 7 jours notés, 14 derniers jours) → la moitié de sa part passe sur les autres prises ; carte d'explication + entrée dans l'historique. | SPEC « Mes habitudes ». |
 | D36 | **Mini-séance ciblée** : construite chaque jour sur les 3 muscles les plus en retard sur leur volume de la semaine ; 3 séries par exercice si le week-end précédent n'a eu aucune séance. | Le volume hebdomadaire compte, pas le jour. |
 | D37 | **Code-barres → Open Food Facts** : photo du code-barres décodée sur l'iPhone (zxing-wasm, embarqué, hors ligne), produit exact (marque, valeurs de l'étiquette) récupéré gratuitement sur Open Food Facts, puis **gardé sur l'iPhone** (magasin « products ») : retrouvable par la recherche, même hors ligne. Saisie manuelle des chiffres si la photo est illisible. | Précision maximale pour les produits emballés, gratuit, sans compte. |
-| D38 | **Reconnaissance IA (facultative)** : photo → API Claude (SDK officiel embarqué, `claude-opus-5-5` par défaut, effort `low`, sortie JSON structurée, repli serveur en cas de refus) → chaque aliment, quantité estimée, marque si lisible. Si l'aliment est dans la base, ses valeurs pour 100 g sont utilisées avec la quantité estimée. Éléments ajustables (×0,5 à ×2) ; bouton « valeurs exactes » qui cherche la marque sur Open Food Facts. La clé d'API de l'utilisateur reste sur l'iPhone, n'est jamais exportée, et l'appel part directement de l'iPhone. Coût ≈ 0,03 $/photo (Opus 5.5), modèles moins chers au choix. | Demande « reconnaître le plat et la marque ». |
+| D38 | ~~Reconnaissance IA par photo~~ **retirée en v1.5** à la demande de l'utilisateur : elle demandait une clé d'API payante. Règle : **aucune fonction ne doit engendrer de coût**. Remplacée par la recherche gratuite par nom dans Open Food Facts (produits de marque) en plus du code-barres. | « Enlève tout ce qui engendre des coûts supplémentaires » (16/11/2026). |
 | D14 | Écriture IndexedDB **vérifiée** (transaction `oncomplete`), bandeau d'erreur rouge persistant sinon ; vérification au démarrage que le stockage est persistant, avec avertissement si refusé (sur iOS, l'installation sur l'écran d'accueil est nécessaire). | « Aucune perte silencieuse ». |
 
 ## 9. Points ouverts
@@ -145,5 +146,6 @@ Statut : **v1.4 — reconnaissance des aliments par photo et code-barres** (voir
 | 1.1 | Refonte : verre liquide turquoise, Aujourd'hui en une action, ajout de repas en 1 tap, photo → nom → plat mémorisé, import de la note de sommeil | ✅ |
 | 2 | Dépense adaptative dans l'appli, ajustement hebdomadaire expliqué et annulable, diagnostic de stagnation, bilan du dimanche, mensurations + photos de composition, matériel, semaine légère, échauffement | ✅ (Ciqual officiel : en attente du site) |
 | 1.3 | Adaptation quotidienne : rattrapage, répartition dynamique, plan de fin de journée, créneaux sautés, mini-séance ciblée | ✅ |
-| 1.4 | Photo → IA (aliments, quantités, marque) ; code-barres → Open Food Facts ; produits gardés hors ligne ; boissons chaudes ajoutées | ✅ |
+| 1.4 | Code-barres → Open Food Facts ; produits gardés hors ligne ; boissons chaudes ajoutées | ✅ |
+| 1.5 | Retrait de la reconnaissance IA (payante) ; recherche gratuite par nom dans Open Food Facts | ✅ |
 | 3 | Corrélations personnelles, horaires de rappel adaptés, Web Push (Cloudflare Workers) | à faire |
