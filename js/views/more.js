@@ -5,6 +5,9 @@ import { todayISO, relativeDays, shortDate } from '../lib/dates.js';
 import { SOURCES, NIVEAUX } from '../data/sources.js';
 import { getProfile, getTargets, saveNights } from '../state.js';
 import { parseSleepNotes, fmtDuration } from '../lib/sleep.js';
+import { EQUIPMENT } from '../data/exercises.js';
+import { reviewSheet } from './review.js';
+import { addDays, mondayOf } from '../lib/dates.js';
 import { go, refresh, updateGlobalBanners, APP_VERSION } from '../main.js';
 
 export async function render(root, params) {
@@ -16,6 +19,13 @@ export async function render(root, params) {
     h('div.list',
       h('button.list-item', { onclick: () => go('config') }, h('span.grow', 'Modifier mon profil', h('br'), h('span.small.muted', `${targets?.kcal} kcal · ${targets?.proteinPerKg} g/kg de protéines`)), h('span.chev', '›')),
       h('button.list-item', { onclick: () => adjustmentsSheet(adjustments) }, h('span.grow', 'Historique des ajustements', h('br'), h('span.small.muted', `${adjustments.length} changement${adjustments.length > 1 ? 's' : ''} daté${adjustments.length > 1 ? 's' : ''} et expliqué${adjustments.length > 1 ? 's' : ''}`)), h('span.chev', '›'))),
+
+    h('div.section-title', 'Bilans de la semaine'),
+    h('div.list', [0, 1, 2, 3].map((k) => { const mon = addDays(mondayOf(todayISO()), -7 * k); return h('button.list-item', { onclick: () => reviewSheet(addDays(mon, 6) > todayISO() ? todayISO() : addDays(mon, 6)) },
+      h('span.grow', k === 0 ? 'Cette semaine' : `Semaine du ${shortDate(mon)}`), h('span.chev', '›')); })),
+
+    h('div.section-title#materiel', 'Matériel'),
+    await equipmentCard(),
 
     h('div.section-title#sommeil', 'Sommeil'),
     h('div.list',
@@ -162,3 +172,14 @@ function nightsSheet(nights) {
     h('span.badge', `${n.quality ?? '–'}/5`)))), { full: true });
 }
 const hhmm = (m) => (m == null ? '–' : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`);
+
+async function equipmentCard() {
+  const eq = await db.kvGet('equipment', []);
+  return h('div.list', EQUIPMENT.map((e) => h('label.list-item',
+    h('input', { type: 'checkbox', checked: eq.includes(e.id), style: { width: '22px', height: '22px', accentColor: 'var(--accent)' }, onchange: async (ev) => {
+      const cur = new Set(await db.kvGet('equipment', []));
+      ev.target.checked ? cur.add(e.id) : cur.delete(e.id);
+      try { await db.kvSet('equipment', [...cur]); toast(ev.target.checked ? `${e.label} ajouté : de nouveaux exercices entrent dans tes séances` : `${e.label} retiré`); } catch {}
+    } }),
+    h('span.grow', e.label, h('br'), h('span.small.muted', e.hint)))));
+}

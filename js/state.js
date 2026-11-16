@@ -102,3 +102,53 @@ export async function saveNights(nights) {
   ops.push(['kv', 'put', { k: 'lastSleepImport', v: new Date().toISOString() }]);
   await db.batch(ops);
 }
+
+// ---------- Moteur hebdomadaire (phase 2) ----------
+import { dailyIntake, runWeekly, weekReview, compositionSignal } from './lib/weekly.js';
+
+export async function loadHistory(days = 120) {
+  const to = todayISO(), from = addDays(to, -days);
+  const [meals, dayRecs, weights, sleep, workouts, adjustments, measures, targets, firstDay] = await Promise.all([
+    db.byDateRange('meals', from, to), db.getAll('days'), db.getAll('weights'), db.getAll('sleep'), db.getAll('workouts'),
+    db.getAll('adjustments'), db.getAll('measures'), getTargets(), db.kvGet('firstDay')]);
+  const intake = dailyIntake(meals, dayRecs, firstDay && firstDay > from ? firstDay : from, to);
+  weights.sort((a, b) => (a.date < b.date ? -1 : 1));
+  const checkins = dayRecs.filter((d) => d.checkin).map((d) => ({ date: d.date, ...d.checkin }));
+  return { intake, weights, sleep, workouts, adjustments, measures, targets, firstDay, checkins };
+}
+
+/**
+ * Lancé à l'ouverture : au plus une fois par semaine, à partir de 14 jours d'utilisation.
+ * Applique le nouvel objectif, le note dans l'historique, et le garde pour la carte « Ajustement de la semaine ».
+ */
+export async function maybeRunWeekly() {
+  const H = await loadHistory();
+  if (!H.targets) return null;
+  const state = (await db.kvGet('adaptState')) || {};
+  const comp = compositionSignal(H.measures);
+  const r = runWeekly({ today: todayISO(), firstDay: H.firstDay, intake: H.intake, weights: H.weights, sleep: H.sleep, targets: H.targets, state, goalKgWeek: comp.goal ?? 0.3 });
+  if (!r.due) return null;
+  const ops = [['kv', 'put', { k: 'adaptState', v: r.state }],
+    ['kv', 'put', { k: 'lastWeekly', v: { date: todayISO(), title: r.title, text: r.text, change: r.change, prevKcal: H.targets.kcal, tdee: r.est.tdee, confidence: r.est.confidence, seen: false } }],
+    ['adjustments', 'put', { date: todayISO(), ts: Date.now(), kind: 'adaptatif', title: r.title, text: r.text }]];
+  if (r.change) ops.push(['kv', 'put', { k: 'targets', v: { ...H.targets, kcal: r.target, source: 'adaptatif', tdee: r.est.tdee, updated: todayISO() } }]);
+  await db.batch(ops);
+  return r;
+}
+
+export async function undoWeekly() {
+  const lw = await db.kvGet('lastWeekly');
+  const t = await getTargets();
+  if (!lw || !lw.change) return;
+  await db.batch([
+    ['kv', 'put', { k: 'targets', v: { ...t, kcal: lw.prevKcal, source: 'manuel', updated: todayISO() } }],
+    ['kv', 'put', { k: 'lastWeekly', v: { ...lw, change: 0, undone: true, seen: true } }],
+    ['adjustments', 'put', { date: todayISO(), ts: Date.now(), kind: 'manuel', title: `Ajustement annulé : retour à ${lw.prevKcal} kcal`, text: 'Annulé à la main.' }]]);
+}
+
+export async function reviewFor(date) {
+  const H = await loadHistory(60);
+  return { review: weekReview({ date, ...H, targets: await effectiveTargets() }), H };
+}
+
+export { compositionSignal };

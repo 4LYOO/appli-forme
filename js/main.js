@@ -6,7 +6,7 @@ import { ICONS } from './icons.js';
 
 document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = ICONS[el.dataset.icon]; });
 
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.2.0';
 
 const VIEWS = {
   aujourdhui: () => import('./views/today.js'),

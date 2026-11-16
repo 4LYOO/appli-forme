@@ -7,7 +7,8 @@ import { QUESTIONS, computeScore, recommend } from '../lib/score.js';
 import { SLOTS, slotById, slotTargets, currentSlot } from '../lib/nutrition.js';
 import { computeStreak, regularity } from '../lib/streak.js';
 import { fmtDuration } from '../lib/sleep.js';
-import { getDay, effectiveTargets, metDates, habitsForSlot, getNight, DEFAULT_INTENTIONS } from '../state.js';
+import { getDay, effectiveTargets, metDates, habitsForSlot, getNight, DEFAULT_INTENTIONS, maybeRunWeekly, undoWeekly } from '../state.js';
+import { reviewSheet, reviewDue } from './review.js';
 import { go, refresh } from '../main.js';
 import { repeatMeal, openAdd } from './meals.js';
 import { sleepImportSheet } from './more.js';
@@ -16,6 +17,7 @@ const IMPRESSIONS = ['', 'très mauvaise', 'mauvaise', 'moyenne', 'bonne', 'trè
 
 export async function render(root, params) {
   const date = todayISO();
+  await maybeRunWeekly().catch((e) => console.error('hebdo', e));
   const [day, t, night] = await Promise.all([getDay(date), effectiveTargets(), getNight(date)]);
   const checkin = day.day.checkin;
   const met = await metDates();
@@ -28,6 +30,8 @@ export async function render(root, params) {
       h('div', h('h1', 'Aujourd\'hui'), h('div.sub', longDate(date))),
       h('button.pill-chip', { onclick: () => showWhy(['habitudes', 'journee_minimale']), 'aria-label': `Série : ${st.streak} jours` }, icon('flame'), String(st.streak))),
     await welcome(),
+    await weeklyCard(),
+    reviewCard(),
     await hero(day, t, checkin, night, date),
     rings(day, t),
     dayCard(day, checkin, st, met, date, first),
@@ -47,6 +51,29 @@ async function welcome() {
       h('p', h('strong', '2. À chaque prise : '), 'une photo ou un tap. Le bouton du haut te montre toujours la prochaine.'),
       h('p', h('strong', '3. Le week-end : '), 'les deux séances, dans l\'onglet Séance.')));
   return card;
+}
+
+// ---------- Ajustement automatique de la semaine ----------
+async function weeklyCard() {
+  const lw = await db.kvGet('lastWeekly');
+  if (!lw || lw.seen) return null;
+  const seen = async () => { await db.kvSet('lastWeekly', { ...lw, seen: true }).catch(() => {}); refresh(); };
+  return h('div.card.accent-border',
+    h('div.eyebrow.small.accent', 'Ajustement de la semaine'),
+    h('div', { style: { fontWeight: 700, fontSize: '19px', marginTop: '4px' } }, lw.title),
+    h('p.small.muted', { style: { marginTop: '6px' } }, lw.text),
+    h('div.row', { style: { marginTop: '10px' } },
+      h('button.btn.btn-sm.btn-primary', { onclick: seen }, 'Compris'),
+      lw.change ? h('button.btn.btn-sm', { onclick: async () => { await undoWeekly().catch(() => {}); toast('Ajustement annulé'); refresh(); } }, 'Annuler') : null,
+      why(['bilan', 'surplus'])));
+}
+
+function reviewCard() {
+  const d = reviewDue();
+  if (!d) return null;
+  return h('div.card', h('button.compact', { onclick: () => reviewSheet(d) },
+    h('div.grow', h('div', { style: { fontWeight: 700 } }, 'Bilan de la semaine'), h('div.small.muted', 'Tendance, moyennes, séances, sommeil et un conseil prioritaire')),
+    h('span.chev', icon('chevron'))));
 }
 
 // ---------- L'action du moment ----------

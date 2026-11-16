@@ -2,7 +2,7 @@
 // sinon l'erreur est remontée ET signalée à l'interface (aucune perte silencieuse).
 
 const DB_NAME = 'appli-forme';
-const DB_VERSION = 2; // v2 : ajout du magasin « sleep »
+const DB_VERSION = 3; // v2 : « sleep » ; v3 : « measures »
 export const STORES = {
   kv: { keyPath: 'k' },
   days: { keyPath: 'date' },
@@ -14,6 +14,7 @@ export const STORES = {
   exstate: { keyPath: 'ex' },
   adjustments: { keyPath: 'id', autoIncrement: true, indexes: ['date'] },
   sleep: { keyPath: 'date' },
+  measures: { keyPath: 'date' },
 };
 
 let dbp = null;

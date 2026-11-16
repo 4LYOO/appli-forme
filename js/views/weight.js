@@ -1,6 +1,7 @@
 // Poids : pesée du matin, courbe (pesées + tendance), moyenne 7 jours, rythme hebdomadaire.
 import * as db from '../db.js';
-import { h, mount, why, fmt, toast, confirmSheet } from '../ui.js';
+import { h, mount, why, fmt, toast, confirmSheet, sheet, pickImage, resizeImage } from '../ui.js';
+import { compositionSignal } from '../lib/weekly.js';
 import { todayISO, addDays, diffDays, shortDate } from '../lib/dates.js';
 import { trendSeries, movingAverage7, weeklyRate, rateStatus } from '../lib/weight.js';
 import { targetGainRange } from '../lib/nutrition.js';
@@ -48,6 +49,8 @@ export async function render(root, params) {
       h('p.small.muted', { style: { marginTop: '10px' } }, `Cible : +${fmt.kg(goal.min, 2)} à +${fmt.kg(goal.max, 2)} kg par semaine (0,25-0,5 % du poids). ${r.ok ? `Calculé sur ${r.n} pesées.` : 'Il faut au moins 5 pesées sur 7 jours.'}`),
       h('div.row', why(['tendance', 'surplus']))),
     chartCard(series),
+    await expenditureCard(),
+    await measuresCard(),
     h('div.section-title', 'Dernières pesées'),
     h('div.list', [...entries].reverse().slice(0, 14).map((e) => h('div.list-item',
       h('span.grow', shortDate(e.date)), h('strong.num', `${fmt.kg(e.kg)} kg`),
@@ -104,4 +107,58 @@ function chartCard(series) {
     wrap, tip,
     h('div.legend', h('span', h('i', { style: { background: '#6b6b70' } }), 'Pesées'), h('span', h('i', { style: { background: 'var(--accent)' } }), 'Tendance lissée')),
     h('p.tiny.muted', { style: { marginTop: '6px' } }, 'Touche la courbe pour voir une date.'));
+}
+
+// ---------- Dépense estimée ----------
+async function expenditureCard() {
+  const [t, st, first, lw] = await Promise.all([db.kvGet('targets'), db.kvGet('adaptState'), db.kvGet('firstDay'), db.kvGet('lastWeekly')]);
+  const days = first ? diffDays(first, todayISO()) : 0;
+  const body = st?.calibrated
+    ? [h('div.kpis',
+        h('div.kpi', h('div.label', 'Ta dépense réelle'), h('div.value', fmt.int(st.tdee), h('span.unit', 'kcal'))),
+        h('div.kpi', h('div.label', 'Formule de départ'), h('div.value', fmt.int(t?.maintenance), h('span.unit', 'kcal')))),
+      h('p.small.muted', { style: { marginTop: '10px' } }, `Confiance ${lw?.confidence || '–'}. Recalculée chaque semaine à partir de tes apports et de ta tendance de poids ; ton objectif suit (${fmt.int(t?.kcal)} kcal).`)]
+    : [h('p.small', `Pour l'instant : formule de départ, ${fmt.int(t?.maintenance)} kcal.`),
+      h('p.small.muted', { style: { marginTop: '6px' } }, days < 14 ? `Premier calcul sur tes données dans ${14 - days} jour${14 - days > 1 ? 's' : ''} (il faut des journées complètes et des pesées régulières).` : 'Premier calcul à la prochaine ouverture du lundi, si assez de journées complètes et de pesées.')];
+  return h('div.card', h('div.card-head', h('h2', 'Dépense énergétique'), why('bilan')), body);
+}
+
+// ---------- Mensurations (1 fois par mois) ----------
+const FIELDS = [['arm', 'Bras (contracté)'], ['chest', 'Torse'], ['waist', 'Taille (nombril)'], ['thigh', 'Cuisse']];
+async function measuresCard() {
+  const ms = (await db.getAll('measures')).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const last = ms.at(-1), first = ms[0];
+  const due = !last || diffDays(last.date, todayISO()) >= 28;
+  const sig = compositionSignal(ms);
+  return h('div.card',
+    h('div.card-head', h('h2', 'Mensurations'), h('button.btn.btn-sm' + (due ? '.btn-primary' : ''), { onclick: () => measureSheet(last) }, due ? 'Mesurer' : 'Nouvelle')),
+    last ? h('div.kpis', FIELDS.map(([k, l]) => h('div.kpi', h('div.label', l), h('div.value', last[k] != null ? fmt.kg(last[k]) : '–', h('span.unit', 'cm')),
+      first !== last && first[k] != null && last[k] != null ? h('div.tiny.muted', `${fmt.signed(last[k] - first[k], 1)} cm depuis le ${shortDate(first.date)}`) : null)))
+      : h('p.small.muted', 'Une fois par mois, au réveil, mètre ruban souple : bras, torse, taille, cuisse. Les photos (face et profil) restent sur ton iPhone.'),
+    ms.length >= 2 ? h('p.small', { style: { marginTop: '10px' } }, sig.text) : null,
+    last ? h('p.tiny.muted', { style: { marginTop: '6px' } }, `Dernière mesure : ${shortDate(last.date)}${due ? ' · à refaire' : ''}`) : null,
+    h('div', why('surplus')));
+}
+
+function measureSheet(prev) {
+  const v = {};
+  const photos = { front: null, side: null };
+  sheet('Mensurations du jour', (close) => {
+    const photoBtn = (key, label) => {
+      const b = h('button.btn', { onclick: async () => {
+        const f = await pickImage(); if (!f) return;
+        try { const blob = await resizeImage(f); photos[key] = await db.put('photos', { blob, date: todayISO(), ts: Date.now(), kind: 'composition' }); b.textContent = `${label} ✓`; } catch (e) { toast(e.message); }
+      } }, label);
+      return b;
+    };
+    return h('div.stack',
+      h('p.small.muted', 'Au réveil, muscles relâchés (sauf le bras : contracté). Même endroit à chaque fois.'),
+      h('div.grid2', FIELDS.map(([k, l]) => h('label.field', h('span', l), h('input.input', { type: 'number', inputmode: 'decimal', step: '0.1', placeholder: prev?.[k] != null ? String(prev[k]).replace('.', ',') : 'cm',
+        oninput: (e) => { const x = parseFloat(e.target.value.replace(',', '.')); v[k] = x > 0 ? x : undefined; } })))),
+      h('div.btn-row', photoBtn('front', 'Photo de face'), photoBtn('side', 'Photo de profil')),
+      h('button.btn.btn-primary', { onclick: async () => {
+        if (!Object.values(v).some(Boolean)) { toast('Indique au moins une mesure'); return; }
+        try { await db.put('measures', { date: todayISO(), ...v, photoIds: Object.values(photos).filter(Boolean), ts: Date.now() }); close(); toast('Mensurations enregistrées'); refresh(); } catch {}
+      } }, 'Enregistrer'));
+  });
 }

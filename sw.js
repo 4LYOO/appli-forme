@@ -24,6 +24,7 @@ const ASSETS = [
   './js/lib/training.js',
   './js/lib/adaptive.js',
   './js/lib/sleep.js',
+  './js/lib/weekly.js',
   './js/data/exercises.js',
   './js/data/plates.js',
   './js/data/sources.js',
@@ -33,6 +34,7 @@ const ASSETS = [
   './js/views/training.js',
   './js/views/more.js',
   './js/views/setup.js',
+  './js/views/review.js',
 ];
 
 self.addEventListener('install', (e) => {
