@@ -4,16 +4,16 @@
 > Ce document est la référence du projet. Il est tenu à jour à chaque phase.
 > En cas de conflit entre les chiffres de la section « Fonctionnalités » et ceux de la section « Exigence de qualité et base scientifique », **cette dernière prévaut** (voir aussi RECHERCHE.md).
 
-Statut : **plan proposé, en attente de validation** (aucun code écrit).
+Statut : **phase 1 + musculation livrées, en test sur iPhone** (voir §10).
 
 ---
 
 ## 1. Qui je suis
-- Homme, 184 cm, 58 kg (IMC ≈ 17,1 : sous le seuil de 18,5), âge : **[à compléter]**.
+- Homme, 184 cm, 58 kg (IMC ≈ 17,1 : sous le seuil de 18,5), né le 09/12/2002 (23 ans, 24 le 9 décembre ; l'âge est recalculé automatiquement).
 - Bilans médicaux normaux : métabolisme rapide, n'a jamais dépassé 65 kg, même pendant des périodes de musculation et de gros repas.
 - Objectif : prendre du poids et du muscle durablement (65 kg puis au-delà), retrouver un physique athlétique, transformer la motivation en discipline.
-- Végétarien. Œufs : **[à compléter]** ; produits laitiers : **[à compléter]**.
-- Journée type : départ 7h, retour 19h (train, sans voiture). Petit-déjeuner avant de partir, déjeuner 12h-13h (préparé à l'avance), dîner vers 20h. Coucher visé : **[à compléter]**.
+- Végétarien. Mange des œufs et des produits laitiers.
+- Journée type : départ 7h, retour 19h (train, sans voiture). Petit-déjeuner avant de partir, déjeuner 12h-13h (préparé à l'avance), dîner vers 20h. Coucher visé entre 21h30 et 22h30, réveil vers 6h, objectif 7h30 de sommeil (→ extinction vers 22h30 au plus tard).
 - Sport : possible le week-end ; en semaine, au mieux 15-20 min entre 19h et 20h.
 - Aucun matériel, pas de salle.
 - Sommeil difficile, suivi dans une AUTRE web app (journal de sommeil), séparée, qui exporte en CSV.
@@ -44,7 +44,17 @@ Statut : **plan proposé, en attente de validation** (aucun code écrit).
 6. **Import du sommeil** : CSV du journal de sommeil, colonnes reconnues par leur nom (en-tête + 2 lignes d'exemple : **[à fournir]**), sans doublons (une nuit par date ; une réimportation remplace), date du dernier import visible, rappel d'import hebdomadaire. Pas de saisie du sommeil ici (hormis la qualité en un tap du questionnaire si la nuit n'est pas importée). Alimente score du jour, autorégulation, corrélations, et quelques conseils issus de la TCC-I.
 7. **Discipline** : « journée minimale » (3 repas + 1 collation + questionnaire) pour garder la série même les mauvais jours ; un jour manqué ne remet pas la série à zéro ; intentions de mise en œuvre (« s'il est 16h, je prends ma collation ») ; bilan du dimanche (tendance du poids, dépense estimée, moyennes calories et protéines, séances faites, sommeil moyen, ajustements de la semaine, UN conseil prioritaire). Jamais de ton culpabilisant.
 8. **Rappels** : v1 = guide intégré pour créer des automatisations Raccourcis iOS (heure fixe → notification qui ouvre l'URL de la bonne page, ex. `?page=collation`). Plus tard : vraies notifications Web Push via Cloudflare Workers + cron (à proposer quand la v1 sera stable).
-   Rappels voulus : petit-déjeuner 6h30, collation 10h, collation 16h, dîner 20h, collation avant le coucher à **[heure]**, pesée le matin, séances samedi et dimanche à **[heure]**, import du sommeil et bilan le dimanche soir.
+   Rappels voulus : petit-déjeuner 6h30, collation 10h, collation 16h, dîner 20h, collation avant le coucher à 21h30, pesée le matin (6h), séances samedi et dimanche à 10h (heure par défaut, modifiable dans le profil), import du sommeil et bilan le dimanche soir.
+
+### Ajout de l'utilisateur (16/11/2026) : saisie des repas sans peser
+- Pas le temps, et pas le détail des grammes (« 80 ou 100 g de riz ? »). → La saisie ne demande **jamais** de grammes par défaut :
+  - **portions visuelles** par aliment (petite / normale / grosse assiette, 1 pot, 1 poignée, 1 c. à soupe…), les grammes restent cachés ;
+  - **assiettes types** (ex. « Riz, lentilles et légumes ») en 3 tailles : petite / normale / grosse ;
+  - **estimation rapide** : « repas léger / normal / copieux », « petite / moyenne / grosse collation » ;
+  - **habitudes** : ce que tu manges souvent à ce créneau, à refaire en un tap ;
+  - **préparations** : un plat cuisiné à l'avance, saisi une fois (paquets entiers), puis « 1 portion » en un tap.
+- **Photo du plat** : jointe au repas (stockée localement), affichée dans la journée et sur les favoris. La reconnaissance automatique par IA demanderait un serveur et une clé d'API payante : proposée plus tard (phase 3), pas en v1.
+- Justification : la méthode adaptative calibre la dépense sur la façon de saisir ; une saisie régulière et approximative vaut mieux qu'une saisie précise mais irrégulière (RECHERCHE.md §1).
 
 ## 5. Règles scientifiques (détail et niveaux de preuve dans RECHERCHE.md)
 - Prise de poids cible ≈ 0,25 à 0,5 % du poids/semaine, surplus 10-20 % au-dessus de la maintenance ; débutant : haut de fourchette acceptable ; surveiller le tour de taille.
@@ -88,11 +98,25 @@ Statut : **plan proposé, en attente de validation** (aucun code écrit).
 | D11 | **Pas de framework, pas de build** ; tests des calculs en JavaScript pur exécutés avec Node (`node --test`) dans GitHub Actions avant le déploiement. Les modules de calcul sont purs (sans DOM) pour être testables. | Fiabilité des calculs. |
 | D12 | **Photos** stockées en local dans IndexedDB (redimensionnées ~1080 px, JPEG), exclues de l'export JSON par défaut (option « inclure les photos ») pour garder des sauvegardes légères. | Taille des sauvegardes. |
 | D13 | **Sauvegarde** : export via la feuille de partage iOS (`navigator.share` avec fichier) → « Enregistrer dans Fichiers » ; repli en téléchargement. | Seule voie fiable sur iPhone. |
+| D15 | **Activité par défaut « modérément actif » (×1,55)** → départ 2 890 kcal / 116 g de protéines (2,0 g/kg). | Journées dehors avec trajets à pied, historique de non-prise de poids ; mieux vaut partir un peu haut que perdre 3 semaines. |
+| D16 | **Estimation adaptative, réglages après simulation (docs/SIMULATIONS.md)** : fenêtre de 28 jours ; estimation chaînée d'une semaine à l'autre et lissée (k = 0,6) ; objectif = dépense + surplus pour +0,3 kg/sem ; pas de +250 / −150 kcal par semaine, zone morte de ±60 kcal ; **baisse uniquement si confiance « bonne »** (asymétrie volontaire : IMC bas). Premier ajustement possible dès 14 jours si confiance ≥ moyenne. Diagnostic « apport » si apports < 93 % de l'objectif. | Les premières versions (fenêtre 21 j, pas de +200) étaient trop lentes et trop bruitées en simulation. |
+| D17 | **Séances « fatiguées »** (séance allégée, score < 50 ou nuit ≤ 2/5) : une baisse de performance n'y est pas comptée comme une stagnation ; la cible est maintenue. | Évite de changer de variante à cause d'une mauvaise semaine de sommeil. |
+| D18 | **Niveaux de départ** : pompes classiques, pompes piquées inclinées, rowing sous table genoux pliés, squat au poids du corps, fentes bulgares, pont fessier, planche. Si la meilleure série est sous le bas de la fourchette, l'appli redescend d'un niveau automatiquement. | Pas de test de niveau à faire : l'appli s'ajuste dès la 1re séance. |
+| D19 | **Volume** : séance A (sam.) et B (dim.) ≈ 21 séries chacune en super-séries (A1/A2…), mini-séance 6 séries. ≈ 8-11 séries par grand muscle avec 1 mini-séance. Ajustement après chaque séance : ±1-2 séries sur l'exercice principal du muscle, pour la prochaine séance du même type (2 à 6 séries par exercice). | RP-like à petits pas. |
+| D20 | **Rappels** : une notification Raccourcis ne peut pas ouvrir l'appli installée (un lien s'ouvre dans Safari, dont les données sont séparées). → Le guide conseille une simple notification, et l'appli met en avant la prise du moment quand on l'ouvre. Les liens `?page=` restent disponibles pour les futures notifications Web Push. | Limite d'iOS. |
+| D21 | **Base d'aliments provisoire** : ciqual.anses.fr était en maintenance le 16/11/2026 → 136 aliments végétariens avec des valeurs moyennes proches de Ciqual, saisies à la main et vérifiées (cohérence 4/4/9 kcal par g). Signalé dans l'appli. À remplacer par l'extrait officiel en phase 2. | Ne pas bloquer la v1. |
 | D14 | Écriture IndexedDB **vérifiée** (transaction `oncomplete`), bandeau d'erreur rouge persistant sinon ; vérification au démarrage que le stockage est persistant, avec avertissement si refusé (sur iOS, l'installation sur l'écran d'accueil est nécessaire). | « Aucune perte silencieuse ». |
 
-## 9. Points ouverts (à compléter par l'utilisateur)
-- Âge.
-- Œufs : oui/non ; produits laitiers : oui/non (impacte la base d'aliments, la collation du coucher et le conseil B12).
-- Heure de coucher visée ; heure des séances du samedi et du dimanche.
-- En-tête du CSV du journal de sommeil + 2 lignes d'exemple (nécessaire pour la phase 2 seulement).
-- Couleur d'accent souhaitée (proposition par défaut : vert-citron `#C6F432`, très lisible sur fond noir).
+## 9. Points ouverts
+- En-tête du CSV du journal de sommeil + 2 lignes d'exemple (pour la phase 2).
+- Couleur d'accent : vert-citron `#C6F432` par défaut ; à revoir une fois l'appli en main.
+- Heure des séances du week-end : 10h par défaut, à confirmer.
+
+## 10. Avancement
+| Phase | Contenu | État |
+|---|---|---|
+| 0 | PWA (manifest, service worker hors ligne), IndexedDB vérifiée, tests Node, déploiement GitHub Actions → Pages | ✅ |
+| 1 | Configuration, Aujourd'hui (questionnaire, score, objectifs, prochain repas, journée minimale, intention, conseil), Repas (portions visuelles, assiettes types, estimation rapide, habitudes, favoris, préparations, photo), Poids (tendance, 7 j, rythme, courbe), Sauvegarde (export/import, rappel hebdo), « Pourquoi ? », guide Raccourcis, historique des ajustements | ✅ |
+| 1b | Séance : programme A/B/mini, 11 exercices à niveaux, saisie répétitions + RIR, minuteur, retour par muscle, volume par muscle, progression automatique, mobilité 10 min | ✅ |
+| 2 | Dépense adaptative dans l'appli (le calcul est déjà écrit et simulé), diagnostic de stagnation, import du sommeil, bilan du dimanche, mensurations et photos de composition, Ciqual officiel | à faire |
+| 3 | Corrélations personnelles, horaires de rappel adaptés, Web Push (Cloudflare Workers), reconnaissance des plats par photo (option) | à faire |
