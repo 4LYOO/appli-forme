@@ -2,13 +2,14 @@
 import * as db from '../db.js';
 import { h, mount, why, fmt, toast, sheet, chips, stepper, clear, confirmSheet } from '../ui.js';
 import { todayISO, mondayOf, addDays, weekday, shortDate } from '../lib/dates.js';
-import { EXERCISES, SESSIONS, MUSCLES, TRACKED, MOBILITY, exerciseById } from '../data/exercises.js';
-import { nextTarget, adjustForReadiness, volumeByMuscle, volumeDelta, perfTrend } from '../lib/training.js';
+import { EXERCISES, SESSIONS, MUSCLES, TRACKED, MOBILITY, WARMUP, exerciseById, sessionBlocks } from '../data/exercises.js';
+import { nextTarget, adjustForReadiness, volumeByMuscle, volumeDelta, perfTrend, deloadAdvice } from '../lib/training.js';
+import { diffDays } from '../lib/dates.js';
 import { LEVELS } from '../lib/score.js';
 import { logAdjustment } from '../state.js';
 import { go, refresh } from '../main.js';
 
-const START_LEVEL = { pompes: 3, pompes_serrees: 1, pike: 1, rowing: 1, superman: 0, squat: 1, bulgare: 1, pont: 1, mollets: 0, gainage: 1, releves: 0 };
+const START_LEVEL = { tractions: 0, curl_elastique: 0, facepull: 0, pompes: 3, pompes_serrees: 1, pike: 1, rowing: 1, superman: 0, squat: 1, bulgare: 1, pont: 1, mollets: 0, gainage: 1, releves: 0 };
 export const VOLUME_TARGET = { pecs: 10, dos: 10, epaules: 10, quadriceps: 10, ischios: 10, triceps: 6, biceps: 4, mollets: 4, abdos: 4 };
 const PAIR_LABEL = ['', 'A', 'B', 'C', 'D', 'E'];
 
@@ -46,7 +47,11 @@ async function overview(root) {
   const week = (await db.byDateRange('workouts', mon, addDays(mon, 6))).filter((w) => w.status === 'terminee');
   const vol = volumeByMuscle(week, exerciseById);
   const checkin = (await db.get('days', today))?.checkin;
-  const mode = checkin?.level === 'allegee' ? 'allegee' : 'complete';
+  const deloadUntil = await db.kvGet('deloadUntil');
+  const inDeload = deloadUntil && today <= deloadUntil;
+  const mode = inDeload || checkin?.level === 'allegee' ? 'allegee' : 'complete';
+  const equipment = await db.kvGet('equipment', []);
+  const deload = inDeload ? null : await deloadState(today);
 
   mount(root, 
     h('div.page-head', h('div', h('h1', 'Séance'), h('div.sub', 'Full body au poids du corps, sans matériel'))),
@@ -60,6 +65,15 @@ async function overview(root) {
         h('div.btn-row',
           ...Object.values(SESSIONS).filter((s) => s.id !== suggested).map((s) => h('button.btn', { onclick: () => go('seance', { start: s.id, mode: 'complete' }) }, s.name))),
         h('button.btn', { onclick: () => go('seance', { start: 'mobilite' }) }, 'Routine mobilité 10 min'))),
+    inDeload ? h('div.card', h('div', { style: { fontWeight: 650 } }, 'Semaine légère en cours'), h('p.small.muted', `Jusqu'au ${shortDate(deloadUntil)} : séances allégées (−40 % de séries). On repart plein pot ensuite.`), why('decharge')) : null,
+    deload && (deload.needed || deload.suggest) ? h('div.card',
+      h('div', { style: { fontWeight: 650 } }, deload.needed ? 'Semaine légère conseillée' : 'Semaine légère possible'),
+      h('p.small.muted', `${deload.reason}. Une semaine avec 40 % de séries en moins laisse la fatigue retomber.`),
+      h('div.row', { style: { marginTop: '8px' } },
+        h('button.btn.btn-sm.btn-primary', { onclick: async () => {
+          const until = addDays(mon, 6);
+          try { await db.kvSet('deloadUntil', until); await db.kvSet('lastDeload', today); await logAdjustment('Semaine légère', `${deload.reason}. Séances allégées jusqu'au ${shortDate(until)}.`, 'programme'); refresh(); } catch {}
+        } }, 'Activer cette semaine'), why('decharge'))) : null,
     h('div.section-title', 'Volume de la semaine (séries)'),
     h('div.card',
       TRACKED.map((m) => {
@@ -67,16 +81,17 @@ async function overview(root) {
         return h('div.vol-row', h('span', MUSCLES[m]), h('div.vol-track', h('div.vol-fill', { style: { width: `${Math.min(100, (v / t) * 100)}%` } })), h('span.vol-num', `${fmt.kg(v, v % 1 ? 1 : 0)}/${t}`));
       }),
       h('p.tiny.muted', { style: { marginTop: '8px' } }, 'Séries directes = 1, indirectes = ½. Avec les 2 séances et 1 mini-séance, tu es à environ 10 séries par grand muscle.'),
+      !equipment.includes('barre') ? h('p.tiny.muted', 'Sans barre de traction, le dos et les biceps sont les points faibles du programme : une barre de porte (≈ 25 €) est l\'achat le plus utile. À cocher dans Plus → Matériel.') : null,
       why(['volume', 'poids_du_corps'])),
     h('div.section-title', 'Exercices'),
-    h('div.list', await Promise.all(EXERCISES.map(async (ex) => {
+    h('div.list', await Promise.all(EXERCISES.filter((ex) => !ex.equipment.length || ex.equipment.some((e) => equipment.includes(e))).map(async (ex) => {
       const lvl = await exLevel(ex.id);
       return h('button.list-item', { onclick: () => exerciseSheet(ex) },
         h('span.grow', h('span', { style: { fontWeight: 600 } }, ex.name), h('br'), h('span.small.muted', `Niveau ${lvl + 1}/${ex.levels.length} · ${ex.levels[lvl].name}`)), h('span.chev', '›'));
     }))),
     h('div.section-title', 'Historique'),
     await historyList(),
-    h('p.tiny.muted', { style: { marginTop: '12px' } }, 'Matériel prévu plus tard : élastiques, barre de traction, haltères (de nouvelles variantes s\'ajouteront aux échelles).'),
+    h('div.list', { style: { marginTop: '12px' } }, h('button.list-item', { onclick: () => go('plus', { section: 'materiel' }) }, h('span.grow', 'Mon matériel', h('br'), h('span.small.muted', equipment.length ? equipment.join(', ') : 'Aucun (poids du corps)')), h('span.chev', '›'))),
   );
 }
 
@@ -104,11 +119,24 @@ async function exerciseSheet(ex) {
     why(['progression', 'rir'])));
 }
 
+/** Fatigue des 7 derniers jours (scores) et baisses de performance récentes → conseil de semaine légère. */
+async function deloadState(today) {
+  const days = await db.byDateRange('days', addDays(today, -6), today).catch(() => []);
+  const ws = (await db.getAll('workouts')).filter((w) => w.status === 'terminee').sort((a, b) => a.startedAt - b.startedAt);
+  if (!ws.length) return null;
+  let drops = 0;
+  for (const w of [...ws].reverse()) { if (w.perfDrop) drops++; else break; }
+  const last = (await db.kvGet('lastDeload')) || ws[0].date;
+  return deloadAdvice({ scores: days.map((d) => d.checkin?.score ?? null), drops, weeksSinceDeload: Math.floor(diffDays(last, today) / 7) });
+}
+
 // ---------- Création d'une séance ----------
 async function createWorkout(sessionId, mode) {
-  const se = SESSIONS[sessionId];
+  const equipment = await db.kvGet('equipment', []);
+  const deloadUntil = await db.kvGet('deloadUntil');
+  if (deloadUntil && todayISO() <= deloadUntil) mode = 'allegee';
   const adj = (await db.kvGet('setsAdj', {}))[sessionId] || {};
-  let blocks = se.blocks.map((b) => ({ ...b, sets: Math.min(6, Math.max(1, b.sets + (adj[b.ex] || 0))) }));
+  let blocks = sessionBlocks(sessionId, equipment).map((b) => ({ ...b, sets: Math.min(6, Math.max(1, b.sets + (adj[b.ex] || 0))) }));
   blocks = adjustForReadiness(blocks, mode);
   const exercises = [];
   for (const b of blocks) {
@@ -141,6 +169,8 @@ async function workoutView(root, id) {
       !done && h('button.btn.btn-sm', { onclick: async () => { if (await confirmSheet('Abandonner la séance ?', 'Les séries déjà notées seront supprimées.', 'Abandonner', true)) { try { await db.del('workouts', w.id); stopTimer(); go('seance', {}, { replace: true }); } catch {} } } }, 'Abandonner')),
     h('div.coach', w.mode === 'allegee' ? 'Séance allégée : moins de séries, garde 3 répétitions en réserve. L\'important est de garder l\'habitude.' : 'Séries de travail à 1-2 répétitions en réserve. Enchaîne les exercices d\'une même lettre (A1 puis A2), repos 60-90 s.',
       ' ', why(w.mode === 'allegee' ? ['autoregulation', 'sommeil_muscle'] : ['rir', 'volume'])),
+    !done && !w.exercises.some((e) => e.sets.length) ? h('details.card', { style: { marginTop: '12px' } }, h('summary', { style: { fontWeight: 650 } }, 'Échauffement (3 min)'),
+      h('ul.small.muted', { style: { margin: '8px 0 0', paddingLeft: '18px' } }, WARMUP.map((x) => h('li', x)))) : null,
   );
 
   for (const e of w.exercises) {
@@ -207,6 +237,12 @@ async function finishSheet(w) {
       try {
         w.status = 'terminee'; w.endedAt = Date.now(); w.feedback = fb;
         w.exercises = w.exercises.filter((e) => e.sets.length);
+        let down = 0;
+        for (const e of w.exercises) {
+          const prev = (await exHistory(e.ex, w.id)).filter((x) => x.level === e.level).at(-1);
+          if (prev && e.sets.reduce((t, x) => t + x.reps, 0) < prev.sets.reduce((t, x) => t + x.reps, 0) * 0.9) down++;
+        }
+        w.perfDrop = down >= 2;
         await db.put('workouts', w);
         await applyVolumeFeedback(w, fb);
         stopTimer(); close();

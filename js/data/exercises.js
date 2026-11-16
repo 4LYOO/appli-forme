@@ -118,6 +118,38 @@ export const EXERCISES = [
       { name: 'Relevés de jambes tendues allongé', min: 8, max: 15, cues: 'Jambes tendues, descente lente sans cambrer.' },
     ],
   },
+  // ----- Avec matériel (activés dans Plus → Matériel) -----
+  {
+    id: 'tractions', name: 'Tractions (barre)', muscles: { dos: 1, biceps: 0.5 }, equipment: ['barre'], unilateral: false,
+    levels: [
+      { name: 'Suspension active (omoplates)', min: 6, max: 12, cues: 'Suspendu bras tendus, tire les épaules vers le bas sans plier les coudes, tiens 1 s.' },
+      { name: 'Tractions négatives (descente 5 s)', min: 3, max: 8, cues: 'Monte menton au-dessus de la barre avec une chaise, puis descends le plus lentement possible.' },
+      { name: 'Tractions assistées (un pied sur une chaise)', min: 5, max: 10, cues: 'Le pied aide juste ce qu\'il faut. Menton au-dessus de la barre.' },
+      { name: 'Tractions', min: 3, max: 10, cues: 'Prise en pronation un peu plus large que les épaules, départ bras tendus, menton au-dessus de la barre.' },
+      { name: 'Tractions lestées (sac à dos)', min: 4, max: 10, cues: 'Sac à dos avec des livres ou des bouteilles.' },
+    ],
+  },
+  {
+    id: 'curl_elastique', name: 'Curl biceps (élastique)', muscles: { biceps: 1 }, equipment: ['elastique'], unilateral: false,
+    levels: [
+      { name: 'Curl élastique léger', min: 12, max: 20, cues: 'Pieds sur l\'élastique, coudes collés au corps, monte et redescends en 2 s.' },
+      { name: 'Curl élastique moyen', min: 10, max: 20, cues: 'Élastique plus dur ou tenu plus court.' },
+      { name: 'Curl élastique fort', min: 8, max: 15, cues: 'Élastique le plus dur, pause 1 s en haut.' },
+    ],
+  },
+  {
+    id: 'facepull', name: 'Tirage visage (élastique)', muscles: { epaules: 1, dos: 0.5 }, equipment: ['elastique'], unilateral: false,
+    levels: [
+      { name: 'Tirage visage élastique', min: 12, max: 20, cues: 'Élastique accroché à hauteur des yeux, tire vers le visage en écartant les mains, coudes hauts.' },
+      { name: 'Tirage visage élastique fort', min: 10, max: 20, cues: 'Élastique plus dur, pause 1 s en arrière.' },
+    ],
+  },
+];
+
+export const EQUIPMENT = [
+  { id: 'barre', label: 'Barre de traction (porte)', hint: '≈ 20-30 € : le meilleur achat pour le dos et les biceps' },
+  { id: 'elastique', label: 'Élastiques de musculation', hint: '≈ 15-25 € le lot : biceps, épaules, assistance aux tractions' },
+  { id: 'halteres', label: 'Haltères', hint: 'Plus tard : variantes lestées' },
 ];
 
 export const exerciseById = (id) => EXERCISES.find((e) => e.id === id);
@@ -131,6 +163,8 @@ export const SESSIONS = {
       { ex: 'bulgare', sets: 3, pair: 2 }, { ex: 'pike', sets: 3, pair: 2 },
       { ex: 'pont', sets: 3, pair: 3 }, { ex: 'mollets', sets: 2, pair: 3 },
       { ex: 'gainage', sets: 2, pair: 4 },
+      { ex: 'tractions', sets: 3, pair: 4, requires: 'barre' },
+      { ex: 'curl_elastique', sets: 2, pair: 3, requires: 'elastique' },
     ],
   },
   B: {
@@ -140,6 +174,8 @@ export const SESSIONS = {
       { ex: 'squat', sets: 3, pair: 2 }, { ex: 'pike', sets: 3, pair: 2 },
       { ex: 'pont', sets: 3, pair: 3 }, { ex: 'superman', sets: 2, pair: 3 },
       { ex: 'mollets', sets: 2, pair: 4 }, { ex: 'releves', sets: 2, pair: 4 },
+      { ex: 'tractions', sets: 3, pair: 3, requires: 'barre', replaces: 'superman' },
+      { ex: 'facepull', sets: 2, pair: 3, requires: 'elastique', replaces: 'superman' },
     ],
   },
   M: {
@@ -158,4 +194,20 @@ export const MOBILITY = [
   { name: 'Ouverture de poitrine contre un chambranle', sec: 60 },
   { name: 'Ischios : jambe tendue sur une chaise (chaque côté)', sec: 60 },
   { name: 'Respiration lente allongé (inspire 4 s, expire 6 s)', sec: 90 },
+];
+
+/** Blocs d'une séance selon le matériel disponible (les blocs « replaces » remplacent l'exercice sans matériel). */
+export function sessionBlocks(sessionId, equipment = []) {
+  const all = SESSIONS[sessionId].blocks;
+  const active = all.filter((b) => !b.requires || equipment.includes(b.requires));
+  const replaced = new Set(active.filter((b) => b.replaces).map((b) => b.replaces));
+  return active.filter((b) => !replaced.has(b.ex)).sort((a, b) => a.pair - b.pair);
+}
+
+export const WARMUP = [
+  'Cercles de bras, 30 s',
+  '10 squats lents',
+  '6-8 pompes faciles (mains sur une table)',
+  '8 tirages légers (serviette ou table)',
+  '5 fentes par jambe',
 ];
