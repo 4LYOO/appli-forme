@@ -41,13 +41,13 @@ export function estimateTDEE({ days, weights, prior, endDate, window = 28, chain
 
 /**
  * Nouvel objectif calorique hebdomadaire = dépense estimée + surplus pour le rythme visé,
- * avec des pas limités (+250 / −150 kcal par semaine) pour rester digeste, et une zone morte de ±60 kcal
+ * avec des pas limités (+200 / −150 kcal par semaine, SPEC : +150 à 200) pour rester digeste, et une zone morte de ±60 kcal
  * (on ne change pas l'objectif pour du bruit).
  */
 export function weeklyTarget({ tdee, currentTarget, goalKgWeek = 0.3, confidence = 'bonne', kcalPerKg = KCAL_PER_KG }) {
   const ideal = tdee + (goalKgWeek * kcalPerKg) / 7;
   const diff = ideal - currentTarget;
-  let step = Math.abs(diff) < 60 ? 0 : clamp(diff, -150, 250);
+  let step = Math.abs(diff) < 60 ? 0 : clamp(diff, -150, 200);
   // Asymétrie voulue (IMC bas, appétit faible) : on ne baisse l'objectif qu'avec une confiance « bonne ».
   if (step < 0 && confidence !== 'bonne') step = 0;
   return { ideal: round10(ideal), target: round10(currentTarget + step), change: round10(step) };
@@ -70,5 +70,5 @@ export function diagnose(stats) {
   if (adherence != null && adherence < 0.93) return { status: 'stagnation', cause: 'apport', action: `Tes apports sont à ${Math.round(adherence * 100)} % de l'objectif. Plutôt que manger plus aux repas, ajoute une collation dense et facile (ex. smoothie lait-banane-avoine-beurre de cacahuète, ≈ 600 kcal).` };
   if (sleepAvg != null && sleepAvg <= 2.5) return { status: 'stagnation', cause: 'sommeil', action: 'Ton sommeil a été mauvais : il peut freiner récupération et appétit. Priorité cette semaine : heure de lever fixe et caféine coupée avant 14h. Apports maintenus.' };
   if (sessionsPlanned && sessionsDone != null && sessionsDone < sessionsPlanned * 0.5) return { status: 'stagnation', cause: 'seances', action: 'Peu de séances faites : la prise risque d\'être plus grasse que musculaire. Priorité : les 2 séances du week-end.' };
-  return { status: 'stagnation', cause: 'depense', action: 'Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu\'estimé. +150 à 200 kcal/j, de préférence en collation dense.' };
+  return { status: 'stagnation', cause: 'depense', action: 'Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu\'estimé. L\'objectif monte (150 à 200 kcal par semaine au plus) : ajoute-les de préférence en collation dense.' };
 }

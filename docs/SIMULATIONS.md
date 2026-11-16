@@ -11,17 +11,17 @@ Dépense réelle simulée : 3000 kcal.
 | Sem. | Poids réel | Tendance | Rythme 14 j | Dépense estimée | Objectif suivant | Diagnostic |
 |---|---|---|---|---|---|---|
 | 1 | 57,9 | 58,1 | – | 2510 (aucune, 7 j, 7 pesées) | 2890 | – |
-| 2 | 57,8 | 57,8 | -0,38 | 2982 (moyenne, 14 j, 14 pesées) | 3140 (+250) | Stagnation → depense |
-| 3 | 57,9 | 57,8 | +0,24 | 3024 (bonne, 21 j, 21 pesées) | 3350 (+210) | OK |
-| 4 | 58,2 | 57,9 | +0,21 | 3007 (bonne, 28 j, 28 pesées) | 3350 | OK |
-| 5 | 58,5 | 58,1 | +0,19 | 2975 (bonne, 28 j, 28 pesées) | 3350 | OK |
-| 6 | 58,8 | 58,3 | +0,45 | 3004 (bonne, 28 j, 28 pesées) | 3350 | OK |
-| 7 | 59,1 | 58,8 | +0,51 | 2940 (bonne, 28 j, 28 pesées) | 3270 (-80) | Trop rapide |
-| 8 | 59,3 | 59,0 | +0,22 | 2910 (bonne, 28 j, 28 pesées) | 3270 | OK |
+| 2 | 57,8 | 57,8 | -0,38 | 2982 (moyenne, 14 j, 14 pesées) | 3090 (+200) | Stagnation → depense |
+| 3 | 57,9 | 57,8 | +0,20 | 3025 (bonne, 21 j, 21 pesées) | 3290 (+200) | OK |
+| 4 | 58,1 | 57,9 | +0,16 | 3006 (bonne, 28 j, 28 pesées) | 3290 | OK |
+| 5 | 58,4 | 58,0 | +0,11 | 2980 (bonne, 28 j, 28 pesées) | 3290 | Stagnation → depense |
+| 6 | 58,6 | 58,2 | +0,38 | 3015 (bonne, 28 j, 28 pesées) | 3290 | OK |
+| 7 | 58,8 | 58,6 | +0,49 | 2945 (bonne, 28 j, 28 pesées) | 3290 | OK |
+| 8 | 59,0 | 58,8 | +0,21 | 2903 (bonne, 28 j, 28 pesées) | 3290 | OK |
 
-Action proposée (semaine 2) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. +150 à 200 kcal/j, de préférence en collation dense. »
+Action proposée (semaine 2) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. L'objectif monte (150 à 200 kcal par semaine au plus) : ajoute-les de préférence en collation dense. »
 
-Bilan : 1,3 kg en 8 semaines ; dépense estimée finale 2910 kcal pour 3000 réels (écart -3,0 %).
+Bilan : 1,0 kg en 8 semaines ; dépense estimée finale 2903 kcal pour 3000 réels (écart -3,2 %).
 
 ## 2. Dépense sous-estimée (réelle 3 300 kcal) → stagnation
 
@@ -30,17 +30,17 @@ Dépense réelle simulée : 3300 kcal.
 | Sem. | Poids réel | Tendance | Rythme 14 j | Dépense estimée | Objectif suivant | Diagnostic |
 |---|---|---|---|---|---|---|
 | 1 | 57,6 | 57,6 | – | 2510 (aucune, 7 j, 7 pesées) | 2890 | – |
-| 2 | 57,0 | 57,4 | -0,41 | 2922 (moyenne, 14 j, 14 pesées) | 3140 (+250) | Stagnation → depense |
-| 3 | 56,8 | 57,1 | -0,48 | 3162 (bonne, 21 j, 21 pesées) | 3390 (+250) | Stagnation → apport |
-| 4 | 56,9 | 57,0 | -0,06 | 3253 (bonne, 28 j, 28 pesées) | 3580 (+190) | Stagnation → depense |
-| 5 | 57,2 | 57,1 | +0,10 | 3256 (bonne, 28 j, 28 pesées) | 3580 | Stagnation → depense |
-| 6 | 57,4 | 57,2 | +0,14 | 3249 (bonne, 28 j, 28 pesées) | 3580 | Stagnation → depense |
-| 7 | 57,7 | 57,4 | +0,27 | 3285 (bonne, 28 j, 28 pesées) | 3580 | OK |
-| 8 | 58,0 | 57,6 | +0,32 | 3317 (bonne, 28 j, 28 pesées) | 3650 (+70) | OK |
+| 2 | 57,0 | 57,4 | -0,41 | 2922 (moyenne, 14 j, 14 pesées) | 3090 (+200) | Stagnation → depense |
+| 3 | 56,7 | 57,1 | -0,48 | 3152 (bonne, 21 j, 21 pesées) | 3290 (+200) | Stagnation → apport |
+| 4 | 56,8 | 56,9 | -0,16 | 3249 (bonne, 28 j, 28 pesées) | 3490 (+200) | Stagnation → depense |
+| 5 | 56,9 | 56,9 | +0,02 | 3260 (bonne, 28 j, 28 pesées) | 3590 (+100) | Stagnation → depense |
+| 6 | 57,2 | 57,0 | +0,10 | 3261 (bonne, 28 j, 28 pesées) | 3590 | Stagnation → depense |
+| 7 | 57,5 | 57,3 | +0,29 | 3285 (bonne, 28 j, 28 pesées) | 3590 | OK |
+| 8 | 57,8 | 57,4 | +0,33 | 3310 (bonne, 28 j, 28 pesées) | 3590 | OK |
 
-Action proposée (semaine 2) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. +150 à 200 kcal/j, de préférence en collation dense. »
+Action proposée (semaine 2) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. L'objectif monte (150 à 200 kcal par semaine au plus) : ajoute-les de préférence en collation dense. »
 
-Bilan : 0,0 kg en 8 semaines ; dépense estimée finale 3317 kcal pour 3300 réels (écart 0,5 %).
+Bilan : -0,2 kg en 8 semaines ; dépense estimée finale 3310 kcal pour 3300 réels (écart 0,3 %).
 
 ## 3. Apports insuffisants (mange 85 % de l'objectif)
 
@@ -69,16 +69,16 @@ Dépense réelle simulée : 3000 kcal.
 |---|---|---|---|---|---|---|
 | 1 | 57,8 | 58,1 | – | 2510 (aucune, 6 j, 5 pesées) | 2890 | – |
 | 2 | 57,5 | 57,5 | -0,66 | 2594 (faible, 10 j, 9 pesées) | 2890 | Stagnation → depense |
-| 3 | 57,5 | 57,3 | +0,13 | 2790 (moyenne, 15 j, 16 pesées) | 3120 (+230) | Stagnation → saisie |
-| 4 | 57,7 | 57,5 | +0,44 | 2894 (bonne, 21 j, 22 pesées) | 3220 (+100) | OK |
-| 5 | 57,9 | 57,7 | +0,09 | 2832 (bonne, 21 j, 20 pesées) | 3220 | Stagnation → depense |
-| 6 | 57,9 | 57,7 | -0,05 | 2892 (bonne, 20 j, 21 pesées) | 3220 | Stagnation → saisie |
-| 7 | 58,1 | 58,1 | +0,47 | 2988 (bonne, 18 j, 16 pesées) | 3320 (+100) | OK |
-| 8 | 58,5 | 58,1 | -0,06 | 3030 (moyenne, 15 j, 15 pesées) | 3320 | Stagnation → saisie |
+| 3 | 57,5 | 57,3 | +0,13 | 2790 (moyenne, 15 j, 16 pesées) | 3090 (+200) | Stagnation → saisie |
+| 4 | 57,6 | 57,5 | +0,42 | 2892 (bonne, 21 j, 22 pesées) | 3220 (+130) | OK |
+| 5 | 57,9 | 57,6 | +0,03 | 2844 (bonne, 21 j, 20 pesées) | 3220 | Stagnation → depense |
+| 6 | 57,9 | 57,7 | +0,03 | 2897 (bonne, 20 j, 21 pesées) | 3220 | Stagnation → saisie |
+| 7 | 58,1 | 58,1 | +0,47 | 2979 (bonne, 18 j, 16 pesées) | 3310 (+90) | OK |
+| 8 | 58,4 | 58,1 | -0,05 | 3016 (moyenne, 15 j, 15 pesées) | 3310 | Stagnation → saisie |
 
-Action proposée (semaine 2) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. +150 à 200 kcal/j, de préférence en collation dense. »
+Action proposée (semaine 2) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. L'objectif monte (150 à 200 kcal par semaine au plus) : ajoute-les de préférence en collation dense. »
 
-Bilan : 0,5 kg en 8 semaines ; dépense estimée finale 3030 kcal pour 3000 réels (écart 1,0 %).
+Bilan : 0,4 kg en 8 semaines ; dépense estimée finale 3016 kcal pour 3000 réels (écart 0,5 %).
 
 ## 5. Sous-déclaration constante (note 85 % de ce qu'il mange)
 
@@ -95,7 +95,7 @@ Dépense réelle simulée : 3000 kcal (soit 2550 kcal « en unités saisies »).
 | 7 | 59,6 | 59,3 | -0,03 | 2537 (bonne, 28 j, 28 pesées) | 2870 (+130) | Stagnation → depense |
 | 8 | 59,8 | 59,3 | -0,05 | 2634 (bonne, 28 j, 28 pesées) | 2960 (+90) | Stagnation → depense |
 
-Action proposée (semaine 6) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. +150 à 200 kcal/j, de préférence en collation dense. »
+Action proposée (semaine 6) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. L'objectif monte (150 à 200 kcal par semaine au plus) : ajoute-les de préférence en collation dense. »
 
 Bilan : 1,8 kg en 8 semaines ; dépense estimée finale 2634 kcal pour 2550 réels (écart 3,3 %).
 
@@ -114,7 +114,7 @@ Dépense réelle simulée : 3000 kcal.
 | 7 | 57,6 | 57,2 | +0,13 | 3120 (bonne, 28 j, 28 pesées) | 3410 | Stagnation → depense |
 | 8 | 57,9 | 57,4 | +0,25 | 3039 (bonne, 28 j, 28 pesées) | 3410 | OK |
 
-Action proposée (semaine 3) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. +150 à 200 kcal/j, de préférence en collation dense. »
+Action proposée (semaine 3) : « Tu manges ce qui est prévu mais le poids ne bouge pas : ta dépense est plus haute qu'estimé. L'objectif monte (150 à 200 kcal par semaine au plus) : ajoute-les de préférence en collation dense. »
 
 Bilan : -0,1 kg en 8 semaines ; dépense estimée finale 3039 kcal pour 3000 réels (écart 1,3 %).
 

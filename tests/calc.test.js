@@ -6,7 +6,7 @@ import { trendSeries, weeklyRate, rateStatus, movingAverage7 } from '../js/lib/w
 import { computeScore, recommend } from '../js/lib/score.js';
 import { computeStreak, regularity } from '../js/lib/streak.js';
 import { nextTarget, adjustForReadiness, volumeByMuscle, volumeDelta, deloadAdvice } from '../js/lib/training.js';
-import { EXERCISES, SESSIONS, exerciseById } from '../js/data/exercises.js';
+import { EXERCISES, SESSIONS, exerciseById, sessionBlocks } from '../js/data/exercises.js';
 import { estimateTDEE, weeklyTarget, diagnose } from '../js/lib/adaptive.js';
 
 test('dates', () => {
@@ -110,11 +110,16 @@ test('progression par exercice', () => {
 });
 
 test('séance allégée et volume', () => {
-  const light = adjustForReadiness(SESSIONS.A.blocks, 'allegee');
+  const light = adjustForReadiness(sessionBlocks('A'), 'allegee');
   assert.deepEqual(light.map((b) => b.sets), [2, 2, 2, 2, 2, 1, 1]);
-  const wk = [SESSIONS.A, SESSIONS.B, SESSIONS.M].map((se) => ({ exercises: se.blocks.map((b) => ({ ex: b.ex, sets: Array(b.sets).fill({ reps: 10 }) })) }));
-  const v = volumeByMuscle(wk, exerciseById);
+  const week = (eq) => ['A', 'B', 'M'].map((id) => ({ exercises: sessionBlocks(id, eq).map((b) => ({ ex: b.ex, sets: Array(b.sets).fill({ reps: 10 }) })) }));
+  const v = volumeByMuscle(week([]), exerciseById);
   for (const m of ['pecs', 'dos', 'epaules', 'quadriceps', 'ischios']) assert.ok(v[m] >= 8 && v[m] <= 12, `${m} = ${v[m]}`);
+  // avec barre et élastiques : plus de dos et de biceps, superman remplacé
+  const ve = volumeByMuscle(week(['barre', 'elastique']), exerciseById);
+  assert.ok(ve.dos > v.dos && ve.biceps > v.biceps, `dos ${v.dos}→${ve.dos}, biceps ${v.biceps}→${ve.biceps}`);
+  assert.ok(!sessionBlocks('B', ['barre']).some((b) => b.ex === 'superman'));
+  assert.ok(sessionBlocks('B', []).some((b) => b.ex === 'superman'));
   assert.equal(volumeDelta({ pump: 2, soreness: 1, pain: true }, 'hausse', 10).delta, -2);
   assert.equal(volumeDelta({ pump: 1, soreness: 1, pain: false }, 'hausse', 10).delta, 1);
   assert.equal(volumeDelta({ pump: 3, soreness: 3, pain: false }, 'stable', 10).delta, -1);
@@ -138,7 +143,7 @@ test('dépense adaptative : cas simple exact', () => {
   const few = estimateTDEE({ days: days.slice(-5), weights: weights.slice(-5), prior: 2500, endDate: '2026-11-21' });
   assert.equal(few.tdee, 2500); assert.equal(few.confidence, 'aucune');
   const wt = weeklyTarget({ tdee: 3100, currentTarget: 2700 });
-  assert.equal(wt.change, 250); // pas limité
+  assert.equal(wt.change, 200); // pas limité
   assert.equal(weeklyTarget({ tdee: 2600, currentTarget: 2920 }).change, 0); // zone morte : écart < 60 kcal
 });
 
