@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Forme">
+  <meta name="format-detection" content="telephone=no">
+  <title>Forme</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="banners" aria-live="polite"></div>
+  <main id="view" tabindex="-1"><div class="boot">Chargement…</div></main>
+  <div id="timer-host"></div>
+  <nav id="tabbar" aria-label="Navigation principale">
+    <a href="?page=aujourdhui" data-tab="aujourdhui"><span class="tab-ico" aria-hidden="true">◎</span><span>Aujourd'hui</span></a>
+    <a href="?page=repas" data-tab="repas"><span class="tab-ico" aria-hidden="true">◐</span><span>Repas</span></a>
+    <a href="?page=seance" data-tab="seance"><span class="tab-ico" aria-hidden="true">▲</span><span>Séance</span></a>
+    <a href="?page=poids" data-tab="poids"><span class="tab-ico" aria-hidden="true">↗</span><span>Poids</span></a>
+    <a href="?page=plus" data-tab="plus"><span class="tab-ico" aria-hidden="true">≡</span><span>Plus</span></a>
+  </nav>
+  <div id="toasts" aria-live="polite"></div>
+  <noscript>Cette application a besoin de JavaScript.</noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

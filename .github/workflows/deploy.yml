@@ -1,0 +1,52 @@
+name: Tests et déploiement
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests des calculs et de la structure
+        run: node --test tests/*.test.js
+      - name: Simulation sur 8 semaines
+        run: node tools/simulate.mjs > /dev/null
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Préparer le site (fichiers de l'appli uniquement)
+        run: |
+          mkdir _site
+          cp -r index.html manifest.webmanifest sw.js css js data icons _site/
+          # Nouvelle version du cache hors ligne à chaque déploiement
+          sed -i "s/const VERSION = 'dev';/const VERSION = '${GITHUB_SHA::8}';/" _site/sw.js
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
