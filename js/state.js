@@ -152,3 +152,65 @@ export async function reviewFor(date) {
 }
 
 export { compositionSignal };
+
+// ---------- Adaptation au jour le jour (v1.3) ----------
+import { carryOver, skipRates, adaptedShares, remainingPlan, suggestPlan } from './lib/daily.js';
+import { SLOTS as _SLOTS, sumMacros as _sum } from './lib/nutrition.js';
+import { PLATES, QUICK } from './data/plates.js';
+
+/** Objectif du jour = objectif de base + rattrapage de la veille. */
+export async function todayTargets(date = todayISO()) {
+  const t = await effectiveTargets();
+  if (!t) return null;
+  const y = addDays(date, -1);
+  const [ym, yd] = await Promise.all([db.byDate('meals', y), db.get('days', y)]);
+  const yk = _sum(ym.map((m) => m.total)).kcal;
+  const complete = ym.length > 0 && (yd?.complete || ['petitdej', 'midi', 'diner'].every((s) => ym.some((m) => m.slot === s)));
+  const c = carryOver({ base: t.kcal, yesterday: ym.length ? { kcal: yk, complete } : null });
+  return { ...t, base: t.kcal, kcal: t.kcal + c.carry, carry: c.carry, carryReason: c.reason };
+}
+
+/** Parts de calories ajustées aux créneaux réellement suivis. */
+export async function habitShares(date = todayISO()) {
+  const meals = await db.byDateRange('meals', addDays(date, -14), addDays(date, -1));
+  return adaptedShares(skipRates(meals, date));
+}
+
+/** Options pour un créneau : plats habituels d'abord, puis favoris, assiettes types et estimations. */
+export async function slotCandidates(slot, foods) {
+  const habits = await habitsForSlot(slot, 4);
+  const favs = (await db.getAll('favorites')).filter((f) => !f.slots || f.slots.includes(slot));
+  const out = [];
+  const seen = new Set();
+  const push = (c) => { if (!seen.has(c.name)) { seen.add(c.name); out.push(c); } };
+  for (const hb of habits) {
+    push({ name: hb.name, kcal: hb.last.total.kcal, p: hb.last.total.p, items: hb.last.items, photoId: hb.last.photoId, habit: true });
+    const k = 1.5, items = hb.last.items.map((i) => ({ ...i, label: `${i.label} ×1,5`, kcal: Math.round(i.kcal * k), p: Math.round(i.p * k * 10) / 10, g: Math.round((i.g || 0) * k * 10) / 10, l: Math.round((i.l || 0) * k * 10) / 10 }));
+    push({ name: `${hb.name} ×1,5`, kcal: Math.round(hb.last.total.kcal * k), p: Math.round(hb.last.total.p * k), items, photoId: hb.last.photoId, habit: true });
+  }
+  for (const f of favs) push({ name: f.name, kcal: f.total.kcal, p: f.total.p, items: f.items, photoId: f.photoId, habit: false });
+  const byName = (n) => foods.find((f) => f.name === n);
+  for (const pl of PLATES.filter((x) => x.slots.includes(slot))) {
+    for (const k of [1, 1.4]) {
+      const items = pl.items.map(([n, g]) => { const f = byName(n); if (!f) return null; const q = g * k / 100; return { foodId: f.id, name: f.name, label: `${Math.round(g * k)} g`, grams: Math.round(g * k), kcal: Math.round(f.kcal * q), p: Math.round(f.p * q * 10) / 10, g: Math.round(f.g * q * 10) / 10, l: Math.round(f.l * q * 10) / 10 }; }).filter(Boolean);
+      const t = _sum(items);
+      push({ name: k === 1 ? pl.name : `${pl.name} (grosse)`, kcal: Math.round(t.kcal), p: Math.round(t.p), items });
+    }
+  }
+  const main = _SLOTS.find((s) => s.id === slot)?.main;
+  for (const q of main ? QUICK.repas : QUICK.collation) push({ name: q.label, kcal: q.kcal, p: q.p, items: [{ name: q.label, label: 'estimation', kcal: q.kcal, p: q.p, g: 0, l: 0 }] });
+  return out;
+}
+
+/** Plan complet du jour : objectif, prises restantes avec cibles dynamiques, et suggestions. */
+export async function dayPlan(date, foods, nowMin) {
+  const [t, hs, day] = await Promise.all([todayTargets(date), habitShares(date), getDay(date)]);
+  const eaten = {};
+  for (const m of day.meals) { eaten[m.slot] = eaten[m.slot] || { kcal: 0, p: 0 }; eaten[m.slot].kcal += m.total.kcal; eaten[m.slot].p += m.total.p; }
+  const plan = remainingPlan({ target: t, eaten, nowMin, shares: hs.shares });
+  const cands = {};
+  for (const s of plan) cands[s.id] = (await slotCandidates(s.id, foods)).slice(0, 8);
+  // On limite la recherche : habitudes et 5 meilleures options proches de la cible du créneau
+  for (const s of plan) cands[s.id] = cands[s.id].sort((a, b) => (b.habit - a.habit) || Math.abs(a.kcal - s.kcal) - Math.abs(b.kcal - s.kcal)).slice(0, 5);
+  return { targets: t, plan, suggestions: suggestPlan(plan, cands), skipped: hs.skipped, day };
+}

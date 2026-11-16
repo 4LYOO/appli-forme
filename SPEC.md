@@ -4,7 +4,7 @@
 > Ce document est la référence du projet. Il est tenu à jour à chaque phase.
 > En cas de conflit entre les chiffres de la section « Fonctionnalités » et ceux de la section « Exigence de qualité et base scientifique », **cette dernière prévaut** (voir aussi RECHERCHE.md).
 
-Statut : **v1.2 — phase 2 livrée (testée sur données simulées), en attente de vraies données** (voir §10).
+Statut : **v1.3 — adaptation au jour le jour** (voir §10).
 
 ---
 
@@ -124,6 +124,11 @@ Statut : **v1.2 — phase 2 livrée (testée sur données simulées), en attente
 | D29 | **Mensurations mensuelles** (bras contracté, torse, taille au nombril, cuisse) + photos face/profil locales. Si le tour de taille augmente ≥ 2 cm et plus de 2 × plus que la moyenne des autres mesures → rythme visé abaissé à +0,2 kg/sem. | Slater 2019 ; preuve faible pour le seuil. |
 | D30 | **Matériel** (Plus → Matériel) : barre de traction (tractions à 5 niveaux, remplace le « Y-T »), élastiques (curl biceps, tirage visage). **Semaine légère** proposée si ≥ 4 scores < 50 sur 7 jours ou baisse de performance sur 2 séances de suite (≥ 2 exercices à −10 %), ou en option après 8 semaines. **Échauffement** de 3 min affiché au début de chaque séance. | Points faibles du programme sans matériel : dos et biceps. |
 | D31 | **Ciqual** : script `tools/ciqual_extract.py` prêt (XLSX ou CSV, rapprochement par mots avec distinction cuit/cru, rapport docs/CIQUAL_CORRESPONDANCES.md). Nouvelle tentative de téléchargement programmée. | Site en maintenance les 16/11. |
+| D32 | **Rattrapage** : si la veille est notée en entier et sous l'objectif de plus de 150 kcal, la moitié du manque (≤ 300 kcal) s'ajoute à l'objectif du jour. Jamais de report négatif. Le moteur hebdomadaire travaille sur l'objectif de base. | Demande « adapter de jour en jour » ; bilan énergétique sur plusieurs jours. |
+| D33 | **Répartition dynamique** : le reste du jour est réparti sur les prises restantes. Un repas principal non noté reste à faire jusqu'à l'heure du repas principal suivant (souvent « mangé mais pas noté ») ; une collation, 2 h 30 après son heure. | Cibles par prise toujours réalistes. |
+| D34 | **Plan de fin de journée** : pour les prises restantes, l'appli choisit parmi tes plats habituels (×1 ou ×1,5), tes favoris, les assiettes types et les estimations la combinaison qui colle au reste (calories puis protéines), en préférant tes habitudes. ✓ = noté en 1 tap. | « M'aider au maximum ». |
+| D35 | **Créneaux sautés** : collation sautée > 60 % des jours (sur ≥ 7 jours notés, 14 derniers jours) → la moitié de sa part passe sur les autres prises ; carte d'explication + entrée dans l'historique. | SPEC « Mes habitudes ». |
+| D36 | **Mini-séance ciblée** : construite chaque jour sur les 3 muscles les plus en retard sur leur volume de la semaine ; 3 séries par exercice si le week-end précédent n'a eu aucune séance. | Le volume hebdomadaire compte, pas le jour. |
 | D14 | Écriture IndexedDB **vérifiée** (transaction `oncomplete`), bandeau d'erreur rouge persistant sinon ; vérification au démarrage que le stockage est persistant, avec avertissement si refusé (sur iOS, l'installation sur l'écran d'accueil est nécessaire). | « Aucune perte silencieuse ». |
 
 ## 9. Points ouverts
@@ -137,4 +142,5 @@ Statut : **v1.2 — phase 2 livrée (testée sur données simulées), en attente
 | 1b | Séance : programme A/B/mini, 11 exercices à niveaux, saisie répétitions + RIR, minuteur, retour par muscle, volume par muscle, progression automatique, mobilité 10 min | ✅ |
 | 1.1 | Refonte : verre liquide turquoise, Aujourd'hui en une action, ajout de repas en 1 tap, photo → nom → plat mémorisé, import de la note de sommeil | ✅ |
 | 2 | Dépense adaptative dans l'appli, ajustement hebdomadaire expliqué et annulable, diagnostic de stagnation, bilan du dimanche, mensurations + photos de composition, matériel, semaine légère, échauffement | ✅ (Ciqual officiel : en attente du site) |
+| 1.3 | Adaptation quotidienne : rattrapage, répartition dynamique, plan de fin de journée, créneaux sautés, mini-séance ciblée | ✅ |
 | 3 | Corrélations personnelles, horaires de rappel adaptés, Web Push (Cloudflare Workers), reconnaissance des plats par photo (option) | à faire |

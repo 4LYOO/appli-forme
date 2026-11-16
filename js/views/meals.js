@@ -6,7 +6,7 @@ import { icon } from '../icons.js';
 import { todayISO, addDays, longDate, nowMinutes } from '../lib/dates.js';
 import { SLOTS, slotById, slotTargets, sumMacros, foodMacros, currentSlot } from '../lib/nutrition.js';
 import { PLATES, SIZES, QUICK, SNACK_IDEAS } from '../data/plates.js';
-import { getDay, effectiveTargets, habitsForSlot } from '../state.js';
+import { getDay, effectiveTargets, habitsForSlot, todayTargets, dayPlan } from '../state.js';
 import { go, refresh } from '../main.js';
 
 let FOODS = null;
@@ -36,6 +36,15 @@ function scaleItem(i, k) {
     kcal: Math.round(i.kcal * k), p: round1(i.p * k), g: round1((i.g || 0) * k), l: round1((i.l || 0) * k) };
 }
 
+/** Enregistre directement une option proposée par le plan du jour. */
+export async function logOption(date, slot, opt) {
+  const total = roundTotal(sumMacros(opt.items));
+  try {
+    const nid = await db.put('meals', { date, slot, name: opt.name, items: opt.items, total, photoId: opt.photoId || null, ts: Date.now() });
+    toast(`${short(opt.name)} · ${fmt.int(total.kcal)} kcal`, { action: 'Annuler', onAction: async () => { await db.del('meals', nid); refresh(); } });
+  } catch {}
+}
+
 /** Copie d'un repas existant (« Refaire »). */
 export async function repeatMeal(entry, date, slot) {
   const { id, ...rest } = entry;
@@ -54,8 +63,10 @@ function autoSnackSlot() {
 export async function render(root, params) {
   await loadFoods();
   const date = params.date || todayISO();
-  const [day, t] = await Promise.all([getDay(date), effectiveTargets()]);
   const isToday = date === todayISO();
+  const [day, t0] = await Promise.all([getDay(date), isToday ? todayTargets(date) : effectiveTargets()]);
+  const t = t0;
+  const dyn = isToday ? new Map((await dayPlan(date, FOODS, nowMinutes())).plan.map((x) => [x.id, x])) : new Map();
   const now = isToday ? currentSlot(nowMinutes(), new Set(day.meals.map((m) => m.slot))) : null;
 
   mount(root,
@@ -69,7 +80,7 @@ export async function render(root, params) {
   const urls = [];
   for (const s of SLOTS) {
     const entries = day.meals.filter((m) => m.slot === s.id);
-    const st = slotTargets(t, s.id);
+    const st = dyn.get(s.id) ? { kcal: dyn.get(s.id).kcal, protein: dyn.get(s.id).p } : slotTargets(t, s.id);
     const tot = sumMacros(entries.map((e) => e.total));
     const rows = await Promise.all(entries.map(async (e) => {
       let img = null;

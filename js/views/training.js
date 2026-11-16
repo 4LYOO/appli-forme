@@ -5,6 +5,7 @@ import { todayISO, mondayOf, addDays, weekday, shortDate } from '../lib/dates.js
 import { EXERCISES, SESSIONS, MUSCLES, TRACKED, MOBILITY, WARMUP, exerciseById, sessionBlocks } from '../data/exercises.js';
 import { nextTarget, adjustForReadiness, volumeByMuscle, volumeDelta, perfTrend, deloadAdvice } from '../lib/training.js';
 import { diffDays } from '../lib/dates.js';
+import { catchUpBlocks } from '../lib/daily.js';
 import { LEVELS } from '../lib/score.js';
 import { logAdjustment } from '../state.js';
 import { go, refresh } from '../main.js';
@@ -130,13 +131,30 @@ async function deloadState(today) {
   return deloadAdvice({ scores: days.map((d) => d.checkin?.score ?? null), drops, weeksSinceDeload: Math.floor(diffDays(last, today) / 7) });
 }
 
+/** Mini-séance : les 3 muscles les plus en retard sur leur volume de la semaine (3 séries si le week-end a sauté). */
+async function catchUpSession(equipment) {
+  const today = todayISO(), mon = mondayOf(today);
+  const week = (await db.byDateRange('workouts', mon, addDays(mon, 6))).filter((w) => w.status === 'terminee');
+  const lastSat = addDays(mon, -2), lastSun = addDays(mon, -1);
+  const wd = weekday(today);
+  const lastWeekend = (await db.byDateRange('workouts', lastSat, lastSun)).filter((w) => w.status === 'terminee' && (w.session === 'A' || w.session === 'B'));
+  const pool = [
+    { ex: 'pompes', muscle: 'pecs' }, { ex: equipment.includes('barre') ? 'tractions' : 'rowing', muscle: 'dos' },
+    { ex: 'squat', muscle: 'quadriceps' }, { ex: 'pont', muscle: 'ischios' }, { ex: 'pike', muscle: 'epaules' },
+    ...(equipment.includes('elastique') ? [{ ex: 'curl_elastique', muscle: 'biceps' }] : []),
+  ];
+  return catchUpBlocks({ volume: volumeByMuscle(week, exerciseById), targets: VOLUME_TARGET, pool, weekendMissed: wd >= 1 && wd <= 5 && lastWeekend.length === 0 })
+    .map((b) => ({ ...b, why: b.why.replace(/^(\w+)/, (m) => MUSCLES[m] || m) }));
+}
+
 // ---------- Création d'une séance ----------
 async function createWorkout(sessionId, mode) {
   const equipment = await db.kvGet('equipment', []);
   const deloadUntil = await db.kvGet('deloadUntil');
   if (deloadUntil && todayISO() <= deloadUntil) mode = 'allegee';
   const adj = (await db.kvGet('setsAdj', {}))[sessionId] || {};
-  let blocks = sessionBlocks(sessionId, equipment).map((b) => ({ ...b, sets: Math.min(6, Math.max(1, b.sets + (adj[b.ex] || 0))) }));
+  let blocks = sessionId === 'M' ? await catchUpSession(equipment)
+    : sessionBlocks(sessionId, equipment).map((b) => ({ ...b, sets: Math.min(6, Math.max(1, b.sets + (adj[b.ex] || 0))) }));
   blocks = adjustForReadiness(blocks, mode);
   const exercises = [];
   for (const b of blocks) {
@@ -147,7 +165,7 @@ async function createWorkout(sessionId, mode) {
       await db.put('exstate', { ex: b.ex, level: t.level });
       await logAdjustment(`${ex.name} : ${t.decision === 'monter' ? 'niveau supérieur' : 'niveau inférieur'}`, t.message, 'programme');
     }
-    exercises.push({ ex: b.ex, pair: b.pair, level: t.level, plannedSets: b.sets, targetReps: t.targetReps, decision: t.decision, message: t.message, rirTarget: b.rirTarget, sets: [] });
+    exercises.push({ ex: b.ex, pair: b.pair, level: t.level, plannedSets: b.sets, targetReps: t.targetReps, decision: t.decision, message: b.why ? `${b.why}. ${t.message}` : t.message, rirTarget: b.rirTarget, sets: [] });
   }
   const c = (await db.get('days', todayISO()))?.checkin;
   const w = { date: todayISO(), session: sessionId, mode, status: 'en_cours', exercises, startedAt: Date.now(), readiness: c ? { score: c.score, sleep: c.sleep } : null };
@@ -167,6 +185,7 @@ async function workoutView(root, id) {
   mount(root, 
     h('div.page-head', h('div', h('h1', se.name), h('div.sub', `${w.mode === 'allegee' ? 'Allégée · ' : ''}${se.duration} · ${done ? 'terminée' : 'en cours'}`)),
       !done && h('button.btn.btn-sm', { onclick: async () => { if (await confirmSheet('Abandonner la séance ?', 'Les séries déjà notées seront supprimées.', 'Abandonner', true)) { try { await db.del('workouts', w.id); stopTimer(); go('seance', {}, { replace: true }); } catch {} } } }, 'Abandonner')),
+    w.session === 'M' ? h('div.coach', 'Mini-séance ciblée : les 3 muscles les plus en retard sur leur volume de la semaine. ', why('mini_rattrapage')) : null,
     h('div.coach', w.mode === 'allegee' ? 'Séance allégée : moins de séries, garde 3 répétitions en réserve. L\'important est de garder l\'habitude.' : 'Séries de travail à 1-2 répétitions en réserve. Enchaîne les exercices d\'une même lettre (A1 puis A2), repos 60-90 s.',
       ' ', why(w.mode === 'allegee' ? ['autoregulation', 'sommeil_muscle'] : ['rir', 'volume'])),
     !done && !w.exercises.some((e) => e.sets.length) ? h('details.card', { style: { marginTop: '12px' } }, h('summary', { style: { fontWeight: 650 } }, 'Échauffement (3 min)'),

@@ -229,6 +229,38 @@ Valeurs moyennes proches de la table Ciqual de l'ANSES (référence française).
 
 - ANSES, table de composition nutritionnelle Ciqual
 
+## Rattrapage de la veille
+*Preuve modérée* · identifiant `rattrapage`
+
+Ton poids suit le bilan sur plusieurs jours, pas jour par jour. Si hier tu as mangé moins que prévu, la moitié du manque (300 kcal au plus) est ajoutée aujourd'hui. On ne retire jamais rien après un gros jour : chez toi, manger plus n'est pas le risque.
+
+- Hall et al., 2011, Lancet (bilan énergétique)
+- Règle de report : choix de conception
+
+## Plan de fin de journée
+*Preuve faible* · identifiant `plan_jour`
+
+Ce qu'il te reste à manger est réparti sur tes prises restantes, et l'appli te propose tes propres plats (ceux que tu manges vraiment) pour y arriver. Décider à l'avance de quoi manger augmente les chances de le faire.
+
+- Gollwitzer & Sheeran, 2006 (intentions de mise en œuvre)
+- Répartition : règle de conception
+
+## Créneaux souvent sautés
+*Preuve faible* · identifiant `creneaux`
+
+Si une collation est sautée plus de 6 jours sur 10, la moitié de ses calories passe sur les prises que tu fais vraiment. Mieux vaut un plan adapté à ta vraie journée qu'un plan idéal jamais suivi.
+
+- Lally et al., 2010 (habitudes)
+- Règle de conception
+
+## Mini-séance ciblée
+*Preuve modérée* · identifiant `mini_rattrapage`
+
+C'est le volume total de la semaine par muscle qui compte, pas le jour où il est fait. La mini-séance de semaine cible donc les muscles qui ont le plus de retard sur leurs ≈ 10 séries.
+
+- Pelland et al., 2024
+- Schoenfeld, Grgic & Krieger, 2019
+
 ## Pourquoi sauvegarder chaque semaine
 *Preuve faible* · identifiant `sauvegarde`
 

@@ -7,10 +7,10 @@ import { QUESTIONS, computeScore, recommend } from '../lib/score.js';
 import { SLOTS, slotById, slotTargets, currentSlot } from '../lib/nutrition.js';
 import { computeStreak, regularity } from '../lib/streak.js';
 import { fmtDuration } from '../lib/sleep.js';
-import { getDay, effectiveTargets, metDates, habitsForSlot, getNight, DEFAULT_INTENTIONS, maybeRunWeekly, undoWeekly } from '../state.js';
+import { getDay, metDates, habitsForSlot, getNight, DEFAULT_INTENTIONS, maybeRunWeekly, undoWeekly, dayPlan, logAdjustment } from '../state.js';
 import { reviewSheet, reviewDue } from './review.js';
 import { go, refresh } from '../main.js';
-import { repeatMeal, openAdd } from './meals.js';
+import { repeatMeal, openAdd, loadFoods, logOption } from './meals.js';
 import { sleepImportSheet } from './more.js';
 
 const IMPRESSIONS = ['', 'très mauvaise', 'mauvaise', 'moyenne', 'bonne', 'très bonne'];
@@ -18,7 +18,9 @@ const IMPRESSIONS = ['', 'très mauvaise', 'mauvaise', 'moyenne', 'bonne', 'trè
 export async function render(root, params) {
   const date = todayISO();
   await maybeRunWeekly().catch((e) => console.error('hebdo', e));
-  const [day, t, night] = await Promise.all([getDay(date), effectiveTargets(), getNight(date)]);
+  const foods = await loadFoods();
+  const [P, night] = await Promise.all([dayPlan(date, foods, nowMinutes()), getNight(date)]);
+  const day = P.day, t = P.targets;
   const checkin = day.day.checkin;
   const met = await metDates();
   if (day.minimum.met) met.add(date);
@@ -32,8 +34,10 @@ export async function render(root, params) {
     await welcome(),
     await weeklyCard(),
     reviewCard(),
-    await hero(day, t, checkin, night, date),
+    await hero(day, t, checkin, night, date, P),
     rings(day, t),
+    planCard(P, date),
+    await skippedCard(P),
     dayCard(day, checkin, st, met, date, first),
     checkin ? await scoreRow(date, checkin, night) : null,
     tip(day, t));
@@ -77,7 +81,7 @@ function reviewCard() {
 }
 
 // ---------- L'action du moment ----------
-async function hero(day, t, checkin, night, date) {
+async function hero(day, t, checkin, night, date, P) {
   if (!checkin) {
     return h('div.card.hero',
       h('div.eyebrow', 'Pour commencer'),
@@ -91,7 +95,9 @@ async function hero(day, t, checkin, night, date) {
     return h('div.card.hero', h('div.eyebrow', 'Journée terminée'), h('div.title', 'Toutes les prises sont notées'),
       h('div.subtitle', 'Bonne nuit. Pense à te coucher vers 22h30.'));
   }
-  const s = slotById(sid), st = slotTargets(t, sid);
+  const s = slotById(sid);
+  const dyn = P.plan.find((x) => x.id === sid);
+  const st = dyn ? { kcal: dyn.kcal, protein: dyn.p } : slotTargets(t, sid);
   const habits = await habitsForSlot(sid, 3);
   const intent = DEFAULT_INTENTIONS.find((i) => i.slot === sid);
   return h('div.card.hero',
@@ -103,7 +109,9 @@ async function hero(day, t, checkin, night, date) {
       h('button.btn', { onclick: () => openAdd({ date: day.date, slot: sid }) }, icon('plus'), 'Ajouter')),
     habits.length ? h('div.quick-repeat', habits.map((hb) => h('button', { onclick: async () => { await repeatMeal(hb.last, day.date, sid); refresh(); } },
       icon('repeat'), `${short(hb.name)} · ${fmt.int(hb.last.total.kcal)}`))) : null,
-    intent ? h('div.intention', `« ${intent.text} »`) : null);
+    intent ? h('div.intention', `« ${intent.text} »`) : null,
+    ...P.plan.filter((x) => slotById(x.id).main && x.id !== sid && slotById(x.id).time < s.time).map((x) =>
+      h('button.why', { style: { display: 'block', marginTop: '8px' }, onclick: () => openAdd({ date: day.date, slot: x.id }) }, `Tu as oublié de noter ton ${slotById(x.id).label.toLowerCase()} ?`)));
 }
 const short = (s, n = 24) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 
@@ -121,7 +129,40 @@ function rings(day, t) {
     h('div.rings', ring(day.totals.kcal, t.kcal, 'Calories', ''), ring(day.totals.p, t.protein, 'Protéines', ' g')),
     h('div.row.between', { style: { marginTop: '10px' } },
       h('span.small.muted', left > 0 || leftP > 0 ? `Reste ${fmt.int(left)} kcal · ${fmt.int(leftP)} g` : 'Objectifs atteints'),
-      why(['surplus', 'proteines'])));
+      why(['surplus', 'proteines'])),
+    t.carry ? h('div.row.between', { style: { marginTop: '4px' } }, h('span.small.accent', `Dont +${t.carry} kcal de rattrapage d'hier`), why('rattrapage')) : null);
+}
+
+// ---------- Plan pour finir la journée ----------
+function planCard(P, date) {
+  const sug = P.suggestions;
+  if (!sug.length || sug.length < 2) return null;
+  const tot = sug.reduce((x, s) => x + s.option.kcal, 0), totP = sug.reduce((x, s) => x + s.option.p, 0);
+  const goal = P.plan.reduce((x, s) => x + s.kcal, 0);
+  return h('div.card',
+    h('div.card-head', h('h2', 'Ton plan pour finir la journée'), why('plan_jour')),
+    h('div', sug.map((s) => h('div.pick',
+      h('div.pick-main', h('div.pick-sub', `${slotById(s.slot).time.replace(':', 'h')} · ${slotById(s.slot).short}`),
+        h('div.pick-name', s.option.name), h('div.pick-sub', `${fmt.int(s.option.kcal)} kcal · ${fmt.int(s.option.p)} g${s.option.habit ? ' · tu le manges souvent' : ''}`)),
+      h('button.icon-btn', { 'aria-label': `Noter ${s.option.name}`, onclick: async () => { await logOption(date, s.slot, s.option); refresh(); } }, icon('check'))))),
+    h('p.small.muted', { style: { marginTop: '8px' } }, `Total ≈ ${fmt.int(tot)} kcal et ${fmt.int(totP)} g pour ${fmt.int(goal)} kcal restants. Touche ✓ quand c'est mangé.`));
+}
+
+// ---------- Créneaux souvent sautés ----------
+async function skippedCard(P) {
+  if (!P.skipped.length) return null;
+  const key = P.skipped.join(',');
+  const seen = await db.kvGet('skippedSeen');
+  if (seen === key) return null;
+  const names = P.skipped.map((id) => slotById(id).label.toLowerCase()).join(' et ');
+  return h('div.card',
+    h('div', { style: { fontWeight: 700 } }, `Tu sautes souvent la ${names}`),
+    h('p.small.muted', { style: { marginTop: '6px' } }, 'La moitié de ses calories passe désormais sur tes autres prises. Si tu veux la garder : une version qui se boit (lait chocolaté, smoothie en bouteille) passe mieux sans faim.'),
+    h('div.row', { style: { marginTop: '8px' } }, h('button.btn.btn-sm.btn-primary', { onclick: async () => {
+      await db.kvSet('skippedSeen', key).catch(() => {});
+      await logAdjustment(`Répartition adaptée : ${names} allégée`, 'Créneau sauté plus de 6 jours sur 10 : la moitié de ses calories est reportée sur les autres prises.', 'habitudes').catch(() => {});
+      refresh();
+    } }, 'Compris'), why('creneaux')));
 }
 
 // ---------- La journée en une ligne ----------

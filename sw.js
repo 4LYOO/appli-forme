@@ -25,6 +25,7 @@ const ASSETS = [
   './js/lib/adaptive.js',
   './js/lib/sleep.js',
   './js/lib/weekly.js',
+  './js/lib/daily.js',
   './js/data/exercises.js',
   './js/data/plates.js',
   './js/data/sources.js',
