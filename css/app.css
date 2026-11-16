@@ -348,3 +348,4 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background:
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   #tabbar, .sheet, .toast, .banner, .cart { background: rgba(24, 29, 34, 0.97); }
 }
+.cart-items .ci > .row { white-space: nowrap; flex: none; }

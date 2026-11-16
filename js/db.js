@@ -2,7 +2,7 @@
 // sinon l'erreur est remontée ET signalée à l'interface (aucune perte silencieuse).
 
 const DB_NAME = 'appli-forme';
-const DB_VERSION = 3; // v2 : « sleep » ; v3 : « measures »
+const DB_VERSION = 4; // v2 : « sleep » ; v3 : « measures » ; v4 : « products » (Open Food Facts)
 export const STORES = {
   kv: { keyPath: 'k' },
   days: { keyPath: 'date' },
@@ -15,6 +15,7 @@ export const STORES = {
   adjustments: { keyPath: 'id', autoIncrement: true, indexes: ['date'] },
   sleep: { keyPath: 'date' },
   measures: { keyPath: 'date' },
+  products: { keyPath: 'code' },
 };
 
 let dbp = null;
@@ -94,6 +95,7 @@ export async function exportAll({ includePhotos = false } = {}) {
   for (const s of Object.keys(STORES)) {
     if (s === 'photos' && !includePhotos) continue;
     let rows = await getAll(s);
+    if (s === 'kv') rows = rows.filter((r) => r.k !== 'aiKey'); // la clé d'API ne quitte jamais l'appareil
     if (s === 'photos') rows = await Promise.all(rows.map(async (p) => ({ ...p, blob: await blobToDataURL(p.blob) })));
     data[s] = rows;
   }
@@ -116,10 +118,12 @@ export async function importAll(obj) {
   validateBackup(obj);
   const photos = obj.data.photos ? await Promise.all(obj.data.photos.map(async (p) => ({ ...p, blob: await dataURLToBlob(p.blob) }))) : null;
   const stores = Object.keys(STORES).filter((s) => (s !== 'photos' || photos) && (s in obj.data || s === 'photos'));
+  const keep = await get('kv', 'aiKey'); // la clé d'API n'est pas dans les sauvegardes : on la garde
   return write(stores, (t) => {
     for (const s of stores) {
       const os = t.objectStore(s);
       os.clear();
+      if (s === 'kv' && keep) os.put(keep);
       for (const row of (s === 'photos' ? photos : obj.data[s] || [])) os.put(row);
     }
   }, 'restauration');

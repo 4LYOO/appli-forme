@@ -8,6 +8,8 @@ import { SLOTS, slotById, slotTargets, sumMacros, foodMacros, currentSlot } from
 import { PLATES, SIZES, QUICK, SNACK_IDEAS } from '../data/plates.js';
 import { getDay, effectiveTargets, habitsForSlot, todayTargets, dayPlan } from '../state.js';
 import { go, refresh } from '../main.js';
+import { toCartItems } from '../lib/vision.js';
+import { fetchProduct, searchProducts, isBarcode } from '../lib/off.js';
 
 let FOODS = null;
 export async function loadFoods() {
@@ -148,9 +150,12 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
   const s = slot ? slotById(slot) : null;
   const bag = [];
   const cart = [];
-  let photoId = null, photoUrl = null, dishName = '', query = '', saved = false, portions = 4, recipeName = '';
+  let photoId = null, photoUrl = null, photoBlob = null, dishName = '', query = '', saved = false, portions = 4, recipeName = '';
+  const aiOn = !!(await db.kvGet('aiKey', ''));
   const dishes = recipe ? [] : await myDishes(slot);
   const usage = await foodUsage();
+  const ALL = [...(await db.getAll('products')).sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0)), ...FOODS];
+  const scanEl = h('div');
 
   const photoEl = h('div');
   const searchEl = h('div.search-field', icon('search'), h('input.input', { type: 'search', placeholder: recipe ? 'Ajouter un ingrédient' : 'Chercher un plat ou un aliment', autocomplete: 'off', enterkeyhint: 'search',
@@ -165,10 +170,11 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
       const blob = await resizeImage(file);
       if (photoId) await db.del('photos', photoId).catch(() => {});
       photoId = await db.put('photos', { blob, date, ts: Date.now() });
+      photoBlob = blob;
       if (photoUrl) URL.revokeObjectURL(photoUrl);
       photoUrl = URL.createObjectURL(blob);
       renderPhoto();
-      setTimeout(() => photoEl.querySelector('input')?.focus(), 100);
+      if (aiOn) recognize(); else setTimeout(() => photoEl.querySelector('input')?.focus(), 100);
     } catch (e) { toast(`Photo non enregistrée : ${e.message}`); }
   }
   function renderPhoto() {
@@ -176,14 +182,79 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
     if (recipe) return;
     if (!photoUrl) {
       mount(photoEl, h('button.photo-cta', { onclick: () => pickImage().then(setPhoto) }, icon('camera'),
-        h('div', h('div', { style: { fontWeight: 650 } }, 'Prendre le plat en photo'), h('div.small.muted', 'Puis dis ce que c\'est : il sera mémorisé pour la prochaine fois'))));
+        h('div', h('div', { style: { fontWeight: 650 } }, 'Prendre le repas en photo'), h('div.small.muted', aiOn ? 'L\'IA reconnaît les aliments et les quantités, tu corriges si besoin' : 'Puis dis ce que c\'est : il sera mémorisé pour la prochaine fois'))),
+        h('button.why', { onclick: () => pickImage().then(scanBarcode) }, '▦ Scanner un code-barres (produit emballé)'));
       return;
     }
     mount(photoEl, h('div.photo-box',
       h('img', { src: photoUrl, alt: 'Photo du plat' }),
       h('div.grow.stack-sm',
-        h('input.input', { placeholder: 'C\'est quoi ? (ex. Pâtes au pesto)', value: dishName, oninput: (e) => { dishName = e.target.value; renderCart(); } }),
-        h('div.tiny.muted', 'Puis choisis la quantité ci-dessous : un plat à toi, une estimation ou une assiette type.'))));
+        h('input.input', { placeholder: 'C\'est quoi ? (facultatif avec l\'IA)', value: dishName, oninput: (e) => { dishName = e.target.value; renderCart(); } }),
+        h('div.row.wrap',
+          aiOn ? h('button.btn.btn-sm.btn-primary', { onclick: recognize }, '✨ Reconnaître') : h('button.btn.btn-sm', { onclick: () => { close(); go('plus', { section: 'ia' }); } }, '✨ Activer l\'IA'),
+          h('button.btn.btn-sm', { onclick: () => photoBlob && scanBarcode(photoBlob) }, '▦ Code-barres')))));
+  }
+
+  // ----- reconnaissance par l'IA -----
+  async function recognize() {
+    if (!photoBlob) return;
+    clear(scanEl); mount(scanEl, h('div.coach', '✨ Analyse de la photo… (5 à 15 s)'));
+    try {
+      const { recognizeMeal } = await import('../ai.js');
+      const res = await recognizeMeal({ blob: photoBlob, foods: FOODS, hint: dishName.trim(), slotLabel: s?.label });
+      const items = toCartItems(res, FOODS);
+      clear(scanEl);
+      if (!items.length) { mount(scanEl, h('div.coach', 'Aucun aliment reconnu. Choisis ci-dessous.')); return; }
+      cart.splice(0, cart.length, ...items.map((i) => ({ ...i, _k: Math.random() })));
+      if (!dishName.trim()) dishName = items.map((i) => i.name.split(' — ')[0]).join(' + ').slice(0, 80);
+      mount(scanEl, h('div.coach', `Reconnu : vérifie les quantités ci-dessous (touche un élément pour l'ajuster). ${res.note || ''}`, ' ', why('ia_photo')));
+      renderPhotoName(); renderCart();
+    } catch (e) { clear(scanEl); mount(scanEl, h('div.coach', `⚠ ${e.message}`)); }
+  }
+  function renderPhotoName() { const i = photoEl.querySelector('.photo-box input'); if (i) i.value = dishName; }
+
+  // ----- code-barres → Open Food Facts -----
+  async function scanBarcode(file) {
+    if (!file) return;
+    clear(scanEl); mount(scanEl, h('div.coach', '▦ Lecture du code-barres…'));
+    let code = null;
+    try { const { readBarcode } = await import('../barcode.js'); code = await readBarcode(file); } catch (e) { console.error(e); }
+    if (!code) {
+      clear(scanEl);
+      const v = prompt('Code-barres illisible sur la photo. Tape les chiffres sous les barres (ou annule) :', '');
+      if (!v || !isBarcode(v)) { mount(scanEl, h('div.coach', 'Pas de code-barres lu. Rapproche-toi (barres nettes, bien éclairées) ou cherche le produit par son nom.')); return; }
+      code = v.trim();
+    }
+    await showProduct(code);
+  }
+  async function showProduct(code) {
+    clear(scanEl); mount(scanEl, h('div.coach', `▦ ${code} : recherche du produit…`));
+    let prod = await db.get('products', code).catch(() => null);
+    if (!prod) {
+      try { prod = await fetchProduct(code); } catch (e) { clear(scanEl); mount(scanEl, h('div.coach', `⚠ ${e.message} (il faut internet la première fois ; ensuite le produit est gardé sur ton iPhone)`)); return; }
+      if (!prod) { clear(scanEl); mount(scanEl, h('div.coach', `Produit ${code} inconnu d'Open Food Facts. Utilise la recherche ou une estimation.`)); return; }
+    }
+    await db.put('products', { ...prod, lastUsed: Date.now() }).catch(() => {});
+    clear(scanEl);
+    mount(scanEl, h('div.card.accent-border', h('div.small.muted', `Open Food Facts · ${code}`), foodRow(prod), why('off')));
+  }
+
+  /** Remplacer un élément estimé par les valeurs exactes d'un produit Open Food Facts (recherche par nom + marque). */
+  async function exactValues(item) {
+    const q = item.name.replace(' — ', ' ');
+    const s2 = sheet('Valeurs exactes', h('div.coach', `Recherche « ${q} » dans Open Food Facts…`));
+    try {
+      const list = await searchProducts(q);
+      clear(s2.body);
+      if (!list.length) { mount(s2.body, h('p.small.muted', 'Aucun produit trouvé. Scanne le code-barres pour une correspondance exacte.')); return; }
+      mount(s2.body, h('p.small.muted', 'Choisis le bon produit : ses valeurs remplaceront l\'estimation, pour la même quantité.'),
+        h('div.list', list.map((p) => h('button.list-item', { onclick: async () => {
+          const it = itemFromFood(p, item.grams || 100, item.label);
+          cart.splice(cart.indexOf(item), 1, { ...it, _k: Math.random() });
+          await db.put('products', { ...p, lastUsed: Date.now() }).catch(() => {});
+          s2.close(); renderCart();
+        } }, h('span.grow', p.name, h('br'), h('span.small.muted', `${p.kcal} kcal · ${p.p} g prot. / 100 g`)), h('span.chev', '›')))));
+    } catch (e) { clear(s2.body); mount(s2.body, h('p.small.muted', `⚠ ${e.message}`)); }
   }
 
   // ----- enregistrer -----
@@ -246,6 +317,17 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
         h('button.chip', { onclick: () => { const v = prompt(`${f.name} : quantité en grammes`, '100'); const g = parseFloat(String(v || '').replace(',', '.')); if (g > 0) addToCart(itemFromFood(f, g)); } }, 'g'))));
   }
 
+  function adjustItem(item) {
+    const base = item._base || item;
+    sheet(item.name, (close2) => h('div.stack',
+      h('p.small.muted', `Estimé : ${item.label}${item.grams ? ` (≈ ${item.grams} g)` : ''}. Ajuste si la quantité réelle est différente.`),
+      h('div.chips', [0.5, 0.75, 1, 1.25, 1.5, 2].map((k) => h('button.chip', { onclick: () => {
+        const n = { ...scaleItem(base, k), _base: base, _k: Math.random() };
+        cart.splice(cart.indexOf(item), 1, n); close2(); renderCart();
+      } }, `×${String(k).replace('.', ',')}`))),
+      item.brand && item.source === 'ia' ? h('button.btn', { onclick: () => { close2(); exactValues(item); } }, '▦ Valeurs exactes de la marque') : null));
+  }
+
   function addToCart(item) { cart.push({ ...item, _k: Math.random() }); renderCart(); toast(`${item.name} ajouté à l'assiette`, { ms: 1500 }); }
 
   async function renderContent() {
@@ -254,7 +336,7 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
     const words = q.split(/\s+/).filter(Boolean);
     const match = (txt) => words.every((w) => norm(txt).includes(w));
     if (recipe) {
-      const list = q ? FOODS.filter((f) => match(f.name + ' ' + f.cat)) : [...FOODS].sort((a, b) => (usage.get(b.id) || 0) - (usage.get(a.id) || 0) || (b.name.includes('préparations') - a.name.includes('préparations')));
+      const list = q ? ALL.filter((f) => match(f.name + ' ' + f.cat)) : [...ALL].sort((a, b) => (usage.get(b.id) || 0) - (usage.get(a.id) || 0) || (b.name.includes('préparations') - a.name.includes('préparations')));
       mount(content, h('p.small.muted', { style: { margin: '10px 0' } }, 'Ajoute TOUS les ingrédients de la préparation (paquets entiers), puis indique le nombre de portions.'), list.slice(0, 40).map(foodRow));
       return;
     }
@@ -275,10 +357,10 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
     }
     const ds = dishes.filter((d) => match(d.name));
     const ps = PLATES.filter((p) => match(p.name));
-    const fs = FOODS.filter((f) => match(f.name + ' ' + f.cat)).sort((a, b) => (usage.get(b.id) || 0) - (usage.get(a.id) || 0)).slice(0, 30);
+    const fs = ALL.filter((f) => match(f.name + ' ' + f.cat)).sort((a, b) => (usage.get(b.id) || 0) - (usage.get(a.id) || 0)).slice(0, 30);
     if (ds.length) mount(content, h('div.section-title', 'Mes plats'), ds.map(dishRow));
     if (ps.length) mount(content, h('div.section-title', 'Assiettes types'), ps.map(plateRow));
-    if (fs.length) mount(content, h('div.section-title', 'Aliments (à composer)'), fs.map(foodRow));
+    if (fs.length) mount(content, h('div.section-title', 'Aliments et produits (à composer)'), fs.map(foodRow));
     if (!ds.length && !ps.length && !fs.length) mount(content, h('p.muted.small', { style: { marginTop: '12px' } }, 'Rien trouvé. Utilise une estimation rapide (efface la recherche).'));
   }
   function allDishes() { clear(content); mount(content, h('div.section-title', 'Tous mes plats'), dishes.map(dishRow)); }
@@ -287,8 +369,11 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
     clear(cartEl);
     if (!cart.length) return;
     const tot = sumMacros(cart);
-    const list = h('div.cart-items', cart.map((i) => h('div.ci', h('span', `${i.name} — ${i.label}`), h('span.row', `${fmt.int(i.kcal)} kcal`,
-      h('button', { 'aria-label': 'Retirer', onclick: () => { cart.splice(cart.indexOf(i), 1); renderCart(); } }, '×')))));
+    const list = h('div.cart-items', { style: cart.some((i) => i.ai) ? { maxHeight: '220px' } : {} }, cart.map((i) => h('div.ci',
+      h('span', { onclick: () => i.ai && adjustItem(i), style: i.ai ? { textDecoration: 'underline dotted' } : {} }, `${i.name} — ${i.label}${i.ai ? (i.source === 'ia' ? ' · estimé' : '') + (i.confidence === 'faible' ? ' (?)' : '') : ''}`),
+      h('span.row', `${fmt.int(i.kcal)} kcal`,
+        i.ai && i.brand && i.source === 'ia' ? h('button', { 'aria-label': 'Valeurs exactes', title: 'Valeurs exactes', onclick: () => exactValues(i) }, '▦') : null,
+        h('button', { 'aria-label': 'Retirer', onclick: () => { cart.splice(cart.indexOf(i), 1); renderCart(); } }, '×')))));
     if (recipe) {
       mount(cartEl, list,
         h('div.grid2', h('input.input', { placeholder: 'Nom (ex. Dahl du dimanche)', value: recipeName, oninput: (e) => (recipeName = e.target.value) }),
@@ -303,7 +388,7 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
     } }, `Enregistrer l'assiette · ${fmt.int(tot.kcal)} kcal · ${fmt.int(tot.p)} g`));
   }
 
-  const { close } = sheet(recipe ? 'Nouvelle préparation' : `Ajouter · ${s.label}`, h('div.stack', photoEl, searchEl, content, cartEl), { full: true,
+  const { close } = sheet(recipe ? 'Nouvelle préparation' : `Ajouter · ${s.label}`, h('div.stack', photoEl, scanEl, searchEl, content, cartEl), { full: true,
     onClose: () => { if (!saved && photoId) db.del('photos', photoId).catch(() => {}); if (photoUrl) URL.revokeObjectURL(photoUrl); bag.forEach((u) => URL.revokeObjectURL(u)); } });
   renderPhoto(); renderContent(); renderCart();
   if (photoPromise) photoPromise.then(setPhoto);

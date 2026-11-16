@@ -166,6 +166,11 @@ F = [
  ('Sucré', 'Confiture', 260, 0.5, 63, 0.2, [['1 c. à café', 10], ['1 c. à soupe', 20]], ''),
  ('Sucré', 'Sucre', 400, 0, 100, 0, [['1 morceau / c. à café', 5]], ''),
  ('Sucré', 'Soda', 42, 0, 10.5, 0, [['1 canette', 330]], ''),
+ # Boissons chaudes
+ ('Boissons', 'Café noir', 2, 0.1, 0.3, 0, [['1 tasse', 100], ['1 mug', 250]], ''),
+ ('Boissons', 'Café au lait (lait demi-écrémé)', 25, 1.7, 2.5, 0.8, [['1 tasse', 200], ['1 bol', 300], ['1 grand bol', 400]], ''),
+ ('Boissons', 'Thé ou tisane', 1, 0, 0.2, 0, [['1 tasse', 250]], ''),
+ ('Boissons', 'Chocolat chaud au lait', 80, 3.4, 11, 2.4, [['1 tasse', 200], ['1 bol', 300]], ''),
  # Plats
  ('Plats', 'Pizza margherita', 245, 10, 30, 9, [['¼ pizza', 100], ['½ pizza', 200], ['1 pizza', 400]], ''),
  ('Plats', 'Quiche aux légumes', 250, 7, 18, 16, [['1 part', 150], ['2 parts', 300]], ''),
