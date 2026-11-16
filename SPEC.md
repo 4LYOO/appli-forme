@@ -85,6 +85,7 @@ Statut : **v1.1 (refonte suite aux retours du 16/11) en test sur iPhone** (voir 
 - Par phases : plan → phase 1 (configuration, Aujourd'hui, repas, poids, sauvegarde) → déploiement → retours → suite. Adaptation et import du sommeil en phase 2, quand il y aura des données.
 - Tests uniquement sur iPhone : après chaque phase, URL + courte liste de vérifications.
 - Commits petits et clairs ; SPEC.md tenu à jour.
+- Publication : chaque version testée est fusionnée dans `main` et publiée sans redemander (accord du 16/11/2026).
 - Points bloquants → question ; sinon choix raisonnables notés ci-dessous.
 
 ---
