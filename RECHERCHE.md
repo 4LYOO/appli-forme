@@ -96,7 +96,7 @@ Ce fichier sert de base à SOURCES.md et aux textes du bouton « Pourquoi ? ». 
 ---
 
 ## Règles sans bonne source (assumées comme choix de conception)
-1. Pas de +150-200 kcal en cas de stagnation (taille du pas).
+1. Taille du pas de +150-200 kcal en cas de stagnation.
 2. Repas « à heures fixes plutôt qu'à la faim ».
 3. Formule du score du jour (pondérations et seuils).
 4. Algorithme de retour par muscle (RP).
