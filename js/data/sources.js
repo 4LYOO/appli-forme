@@ -143,9 +143,9 @@ export const SOURCES = {
     refs: ['Clear, Atomic Habits, 2018', 'Lally et al., 2010'],
   },
   ciqual: {
-    title: 'Base d\'aliments', niveau: 'modere',
-    text: 'Valeurs moyennes proches de la table Ciqual de l\'ANSES (référence française). Provisoire : elles seront remplacées par l\'extrait officiel dès que le site de l\'ANSES sera de nouveau accessible.',
-    refs: ['ANSES, table de composition nutritionnelle Ciqual'],
+    title: 'Base d\'aliments', niveau: 'fort',
+    text: 'Valeurs de la table Ciqual 2020 de l\'ANSES, la référence française de composition des aliments, pour 123 des 140 aliments de l\'appli. Les 17 autres (skyr, edamame, plats végétariens maison…) n\'ont pas d\'équivalent fiable dans Ciqual : ce sont des moyennes estimées.',
+    refs: ['ANSES, table de composition nutritionnelle Ciqual 2020', 'Énergie absente de certaines lignes : recalculée selon le règlement (UE) n° 1169/2011'],
   },
   rattrapage: {
     title: 'Rattrapage de la veille', niveau: 'modere',

@@ -412,5 +412,5 @@ async function moreSheet(date) {
     h('div.section-title', 'Les plus riches en calories'),
     h('div.list', dense.map(({ f, p, kcal }) => h('div.list-item', h('span.grow', f.name, h('br'), h('span.small.muted', p.label)), h('strong.num', `${fmt.int(kcal)} kcal`)))),
     why(['densite', 'liquides', 'heures_fixes']),
-    h('p.tiny.muted', 'Valeurs nutritionnelles proches de la table Ciqual (ANSES), provisoires.')), { full: true });
+    h('p.tiny.muted', 'Valeurs nutritionnelles : table Ciqual 2020 (ANSES) pour la plupart des aliments ; produits emballés : Open Food Facts.')), { full: true });
 }

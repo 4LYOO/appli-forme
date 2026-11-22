@@ -223,11 +223,12 @@ Garder un minimum même les mauvais jours (3 repas, 1 collation, le questionnair
 - Lally et al., 2010
 
 ## Base d'aliments
-*Preuve modérée* · identifiant `ciqual`
+*Preuve forte* · identifiant `ciqual`
 
-Valeurs moyennes proches de la table Ciqual de l'ANSES (référence française). Provisoire : elles seront remplacées par l'extrait officiel dès que le site de l'ANSES sera de nouveau accessible.
+Valeurs de la table Ciqual 2020 de l'ANSES, la référence française de composition des aliments, pour 123 des 140 aliments de l'appli. Les 17 autres (skyr, edamame, plats végétariens maison…) n'ont pas d'équivalent fiable dans Ciqual : ce sont des moyennes estimées.
 
-- ANSES, table de composition nutritionnelle Ciqual
+- ANSES, table de composition nutritionnelle Ciqual 2020
+- Énergie absente de certaines lignes : recalculée selon le règlement (UE) n° 1169/2011
 
 ## Rattrapage de la veille
 *Preuve modérée* · identifiant `rattrapage`

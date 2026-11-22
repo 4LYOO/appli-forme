@@ -1,4 +1,6 @@
-"""Génère data/foods.json.
+"""Génère data/foods.json (valeurs de départ saisies à la main).
+
+ATTENTION : relancer ensuite `python3 tools/ciqual_extract.py <table Ciqual>` pour remettre les valeurs officielles Ciqual.
 
 Valeurs pour 100 g : kcal, protéines (p), glucides (g), lipides (l).
 STATUT : valeurs moyennes proches de la table Ciqual (ANSES), saisies à la main car le site

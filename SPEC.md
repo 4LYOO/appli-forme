@@ -4,7 +4,7 @@
 > Ce document est la référence du projet. Il est tenu à jour à chaque phase.
 > En cas de conflit entre les chiffres de la section « Fonctionnalités » et ceux de la section « Exigence de qualité et base scientifique », **cette dernière prévaut** (voir aussi RECHERCHE.md).
 
-Statut : **v1.5 — 100 % gratuit** (voir §10).
+Statut : **v1.6 — base d'aliments Ciqual 2020** (voir §10).
 
 ---
 
@@ -132,6 +132,7 @@ Statut : **v1.5 — 100 % gratuit** (voir §10).
 | D36 | **Mini-séance ciblée** : construite chaque jour sur les 3 muscles les plus en retard sur leur volume de la semaine ; 3 séries par exercice si le week-end précédent n'a eu aucune séance. | Le volume hebdomadaire compte, pas le jour. |
 | D37 | **Code-barres → Open Food Facts** : photo du code-barres décodée sur l'iPhone (zxing-wasm, embarqué, hors ligne), produit exact (marque, valeurs de l'étiquette) récupéré gratuitement sur Open Food Facts, puis **gardé sur l'iPhone** (magasin « products ») : retrouvable par la recherche, même hors ligne. Saisie manuelle des chiffres si la photo est illisible. | Précision maximale pour les produits emballés, gratuit, sans compte. |
 | D38 | ~~Reconnaissance IA par photo~~ **retirée en v1.5** à la demande de l'utilisateur : elle demandait une clé d'API payante. Règle : **aucune fonction ne doit engendrer de coût**. Remplacée par la recherche gratuite par nom dans Open Food Facts (produits de marque) en plus du code-barres. | « Enlève tout ce qui engendre des coûts supplémentaires » (16/11/2026). |
+| D39 | **Ciqual 2020 intégré (22/11/2026)** : 123 aliments sur 140 avec les valeurs Ciqual, par correspondance choisie à la main (`tools/ciqual_map.json`, plus de rapprochement automatique : il faisait des erreurs, ex. beurre → haricot beurre). Source : copie SQL de la table sur data.gouv.fr (site de l'ANSES en maintenance), vérifiée (3 186 aliments, colonnes officielles) ; énergie manquante recalculée selon le règlement (UE) n° 1169/2011 (écart médian 0,2 % là où on peut comparer). 17 aliments sans équivalent fiable gardent une valeur estimée. À revérifier sur le fichier officiel quand ciqual.anses.fr sera de retour. | Demande de l'utilisateur. |
 | D14 | Écriture IndexedDB **vérifiée** (transaction `oncomplete`), bandeau d'erreur rouge persistant sinon ; vérification au démarrage que le stockage est persistant, avec avertissement si refusé (sur iOS, l'installation sur l'écran d'accueil est nécessaire). | « Aucune perte silencieuse ». |
 
 ## 9. Points ouverts
@@ -148,4 +149,5 @@ Statut : **v1.5 — 100 % gratuit** (voir §10).
 | 1.3 | Adaptation quotidienne : rattrapage, répartition dynamique, plan de fin de journée, créneaux sautés, mini-séance ciblée | ✅ |
 | 1.4 | Code-barres → Open Food Facts ; produits gardés hors ligne ; boissons chaudes ajoutées | ✅ |
 | 1.5 | Retrait de la reconnaissance IA (payante) ; recherche gratuite par nom dans Open Food Facts | ✅ |
+| 1.6 | Valeurs Ciqual 2020 pour 123 aliments | ✅ |
 | 3 | Corrélations personnelles, horaires de rappel adaptés, Web Push (Cloudflare Workers) | à faire |

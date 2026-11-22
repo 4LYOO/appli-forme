@@ -10,7 +10,7 @@ Application web personnelle (PWA) de suivi nutrition, prise de masse et musculat
 - `node --test tests/*.test.js` : tests des calculs et de la structure (aucune dépendance).
 - `node tools/simulate.mjs --write` : régénère docs/SIMULATIONS.md.
 - `node tools/gen_sources.mjs` : régénère SOURCES.md depuis `js/data/sources.js`.
-- `python3 tools/build_foods.py` : régénère `data/foods.json`.
+- `python3 tools/build_foods.py` puis `python3 tools/ciqual_extract.py <table Ciqual .xlsx/.csv>` : régénère `data/foods.json` (valeurs de départ, puis valeurs officielles Ciqual selon `tools/ciqual_map.json`).
 - Tout nouveau fichier de l'appli doit être ajouté à la liste `ASSETS` de `sw.js` (un test le vérifie).
 
 Déploiement : chaque push sur `main` lance les tests puis publie sur GitHub Pages (`.github/workflows/deploy.yml`).

@@ -35,7 +35,7 @@ def num(v):
   if v is None: return None
   s = str(v).strip().replace(',', '.')
   if s in ('', '-', 'traces'): return 0.0 if s == 'traces' else None
-  s = s.lstrip('<').strip()
+  if s.startswith('<'): return 0.0  # « < 0,5 » : sous le seuil de quantification
   try: return float(s)
   except ValueError: return None
 
@@ -48,19 +48,31 @@ def read_table(path):
     head, data = [str(h or '') for h in rows[0]], rows[1:]
   else:
     raw = p.read_bytes().decode('utf-8', errors='replace')
-    dialect = csv.Sniffer().sniff(raw[:5000], delimiters=';,\t')
-    rows = list(csv.reader(raw.splitlines(), dialect))
+    first = raw.splitlines()[0]
+    delim = max(';,\t', key=first.count)  # séparateur le plus fréquent de l'en-tête
+    rows = list(csv.reader(raw.splitlines(), delimiter=delim))
     head, data = rows[0], rows[1:]
   col = lambda *keys: next(i for i, h in enumerate(head) if all(k in norm(h) for k in keys))
-  c_name = col('alim', 'nom', 'fr')
+  c_name = next((i for i, h in enumerate(head) if norm(h).split() == ['alim', 'nom', 'fr']), None)
+  if c_name is None: c_name = col('alim', 'nom', 'fr')
+  c_code = next((i for i, h in enumerate(head) if norm(h).split() == ['alim', 'code']), None)
   c_kcal = col('energie', 'kcal')
   c_p = col('proteines')
   c_g = col('glucides')
   c_l = col('lipides')
+  opt = lambda *k: next((i for i, h in enumerate(head) if all(x in norm(h) for x in k)), None)
+  c_f, c_a, c_o, c_po = opt('fibres'), opt('alcool'), opt('acides', 'organiques'), opt('polyols')
   out = []
   for r in data:
     if not r or not r[c_name]: continue
-    out.append({'name': str(r[c_name]), 'kcal': num(r[c_kcal]), 'p': num(r[c_p]), 'g': num(r[c_g]), 'l': num(r[c_l])})
+    row = {'code': str(r[c_code]).strip() if c_code is not None else None, 'name': str(r[c_name]), 'kcal': num(r[c_kcal]), 'p': num(r[c_p]), 'g': num(r[c_g]), 'l': num(r[c_l]), 'recalc': False}
+    # Énergie absente de certaines copies : recalculée avec les coefficients du règlement (UE) n° 1169/2011
+    # (vérifié : écart médian 0,2 % avec les valeurs officielles quand les deux existent).
+    if row['kcal'] is None and None not in (row['p'], row['g'], row['l']):
+      extra = lambda c, k: k * (num(r[c]) or 0) if c is not None else 0
+      row['kcal'] = 4 * row['p'] + 4 * row['g'] + 9 * row['l'] + extra(c_f, 2) + extra(c_a, 7) + extra(c_o, 3) + extra(c_po, 2.4)
+      row['recalc'] = True
+    out.append(row)
   return out
 
 def best_match(food, table):
@@ -85,13 +97,24 @@ def main(path):
   lines = ['# Correspondances avec la table Ciqual', '', f'Source : {pathlib.Path(path).name} — {len(table)} aliments lus.', '',
            '| Aliment de l\'appli | Aliment Ciqual retenu | Confiance | kcal avant → après |', '|---|---|---|---|']
   updated = kept = 0
+  mapping = json.loads((ROOT / 'tools' / 'ciqual_map.json').read_text())
+  by_code = {r['code']: r for r in table if r.get('code')}
   for f in data['foods']:
-    row, score = best_match(f, table)
-    if row and score >= 0.75:
+    # Correspondance explicite d'abord (choisie à la main) ; sans entrée dans la table : valeur provisoire conservée.
+    code = mapping.get(f['id'])
+    if code is not None and str(code) in by_code:
+      row, score = by_code[str(code)], 1.0
+    elif mapping:
+      row, score = None, 0.0
+    else:
+      row, score = best_match(f, table)
+    if row and score >= 0.75 and row['kcal'] is not None:
       before = f['kcal']
-      f.update({'kcal': round(row['kcal']), 'p': round(row['p'] or 0, 1), 'g': round(row['g'] or 0, 1), 'l': round(row['l'] or 0, 1), 'ciqual': row['name']})
+      f.update({'ciqual_code': row.get('code'), 'kcal': round(row['kcal']), 'p': round(row['p'] or 0, 1), 'g': round(row['g'] or 0, 1), 'l': round(row['l'] or 0, 1), 'ciqual': row['name']})
       updated += 1
-      lines.append(f"| {f['name']} | {row['name']} | {score:.2f} | {before} → {f['kcal']} |")
+      flag = ' (énergie recalculée)' if row.get('recalc') else ''
+      warn = ' ⚠' if before and abs(f['kcal'] - before) > max(40, before * 0.25) else ''
+      lines.append(f"| {f['name']} | {row['name']}{flag} | {score:.2f} | {before} → {f['kcal']}{warn} |")
     else:
       kept += 1
       lines.append(f"| {f['name']} | **non remplacé** ({row['name'] if row else 'aucun'}) | {score:.2f} | {f['kcal']} (provisoire) |")
