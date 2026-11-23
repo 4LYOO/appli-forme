@@ -6,6 +6,7 @@ import { todayISO, addDays, diffDays, shortDate } from '../lib/dates.js';
 import { trendSeries, movingAverage7, weeklyRate, rateStatus } from '../lib/weight.js';
 import { targetGainRange } from '../lib/nutrition.js';
 import { refresh } from '../main.js';
+import { goalData } from '../state.js';
 
 let range = 30;
 
@@ -30,6 +31,7 @@ export async function render(root, params) {
 
   mount(root, 
     h('div.page-head', h('div', h('h1', 'Poids'), h('div.sub', 'Pèse-toi au réveil, après les toilettes'))),
+    await capCard(),
     h('div.card#saisie', h('div.card-head', h('h2', todayEntry ? 'Pesée du jour : notée' : 'Pesée du jour')), input,
       h('div', { style: { marginTop: '10px' } }, h('button.btn.btn-primary', { onclick: save }, todayEntry ? 'Corriger' : 'Enregistrer'))),
   );
@@ -67,6 +69,23 @@ export async function render(root, params) {
         onclick: async () => { if (await confirmSheet('Supprimer cette pesée ?', `${shortDate(e.date)} : ${fmt.kg(e.kg)} kg`, 'Supprimer', true)) { try { await db.del('weights', e.date); refresh(); } catch {} } } }, '×')))),
   );
   if (params.focus === 'saisie') setTimeout(() => input.focus(), 100);
+}
+
+// ---------- Le cap : 65 kg d'abord, puis des paliers de 3 kg ----------
+async function capCard() {
+  const g = await goalData().catch(() => null);
+  if (!g) return null;
+  const mois = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return h('div.card',
+    h('div.card-head', h('h2', g.passed ? `Cap suivant : ${fmt.kg(g.goal, 0)} kg` : `Cap : ${fmt.kg(g.goal, 0)} kg`), why(['surplus', 'cap'])),
+    h('div.cap-bar', h('div', { style: { width: `${Math.round(g.pct * 100)}%` } })),
+    h('div.cap-steps', h('span', `${fmt.kg(g.from)} kg`), h('span', `${fmt.kg(g.currentKg)} kg`), h('span', `${fmt.kg(g.goal, 0)} kg`)),
+    h('p.small', { style: { marginTop: '10px' } }, g.remaining > 0
+      ? `Encore ${fmt.kg(g.remaining)} kg. ${g.eta ? `Au rythme ${g.measured ? 'mesuré' : 'visé (+0,3 kg/sem)'}, ≈ ${mois(g.eta)} (${g.weeks} semaines).` : ''}`
+      : 'Cap atteint.'),
+    h('p.small.muted', g.passed
+      ? `Premier cap de ${fmt.kg(g.goal - 3, 0)} kg dépassé : on continue par paliers de 3 kg, en gardant un tour de taille stable (mensurations).`
+      : 'Ensuite, on continue par paliers de 3 kg. Le rythme lent (0,25-0,5 % du poids par semaine) maximise la part de muscle.'));
 }
 
 function chartCard(series) {

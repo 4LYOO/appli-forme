@@ -167,6 +167,11 @@ export const SOURCES = {
     text: 'C\'est le volume total de la semaine par muscle qui compte, pas le jour où il est fait. La mini-séance de semaine cible donc les muscles qui ont le plus de retard sur leurs ≈ 10 séries.',
     refs: ['Pelland et al., 2024', 'Schoenfeld, Grgic & Krieger, 2019'],
   },
+  cap: {
+    title: 'Un cap, puis des paliers', niveau: 'modere',
+    text: 'Un objectif chiffré et daté, découpé en étapes visibles, aide à tenir dans la durée : on suit sa progression au lieu de compter sur la motivation du jour. Au rythme de +0,25 à +0,5 % du poids par semaine (≈ 0,15-0,3 kg pour toi), une bonne part du poids pris est du muscle si tu t\'entraînes ; plus vite, c\'est surtout du gras. Après 65 kg, l\'appli propose des paliers de 3 kg tant que le tour de taille reste stable.',
+    refs: ['Harkin et al., 2016 (suivi des progrès et atteinte des objectifs, méta-analyse)', 'Iraki et al., 2019 (surplus en prise de masse)', 'Garthe et al., 2013 (rythme de prise et composition)'],
+  },
   travail_physique: {
     title: 'Métier manuel et dépense réelle', niveau: 'faible',
     text: 'Ta dépense est estimée par morceaux : métabolisme de base × 1,2 (vie courante), + l\'énergie active mesurée par l\'app Santé (pas), + environ 250 kcal par jour de travail manuel (gestes répétés des bras, debout), + environ 250 kcal par séance, le tout ramené à la journée. Ce n\'est qu\'un point de départ : ta courbe de poids corrige ensuite le chiffre chaque semaine. Côté entraînement, tes bras et ton dos travaillent déjà 5 jours sur 7 : la mini-séance de semaine passe aux jambes et au tronc, la séance du dimanche (veille de travail) allège un peu le haut et renforce les jambes, et un étirement des avant-bras est ajouté pour protéger tendons et poignets.',

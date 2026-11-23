@@ -17,6 +17,7 @@ const ASSETS = [
   './js/icons.js',
   './js/state.js',
   './js/lib/dates.js',
+  './js/lib/goal.js',
   './js/lib/nutrition.js',
   './js/lib/weight.js',
   './js/lib/score.js',

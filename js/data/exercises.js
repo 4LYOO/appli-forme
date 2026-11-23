@@ -203,9 +203,9 @@ export const UPPER = new Set(['pompes', 'pompes_serrees', 'pike', 'rowing', 'sup
 
 /**
  * Blocs d'une séance selon le matériel disponible (les blocs « replaces » remplacent l'exercice sans matériel).
- * upperBodyJob : métier qui fatigue le haut du corps. La séance B (dimanche, veille de travail) retire 1 série
- * à chaque exercice du haut (minimum 2) et ajoute 1 série au squat et au pont : le volume hebdomadaire du haut
- * reste proche de 8-10 séries grâce au travail, celui des jambes (grands muscles, plus de masse) augmente.
+ * upperBodyJob : métier qui fatigue le haut du corps (effort d'endurance, pas un stimulus de prise de muscle).
+ * Le volume du haut est déplacé, pas supprimé : séance A (samedi) +1 série pompes/rowing/tractions,
+ * séance B (dimanche, veille de travail) −1 série par exercice du haut (min. 2) et +1 squat et pont.
  */
 export function sessionBlocks(sessionId, equipment = [], { upperBodyJob = false } = {}) {
   const all = SESSIONS[sessionId].blocks;
@@ -214,6 +214,10 @@ export function sessionBlocks(sessionId, equipment = [], { upperBodyJob = false 
   let blocks = active.filter((b) => !replaced.has(b.ex)).sort((a, b) => a.pair - b.pair);
   if (upperBodyJob && sessionId === 'B') {
     blocks = blocks.map((b) => (UPPER.has(b.ex) ? { ...b, sets: Math.max(2, b.sets - 1) } : ['squat', 'pont'].includes(b.ex) ? { ...b, sets: b.sets + 1 } : b));
+  }
+  // Le volume retiré le dimanche (veille de travail) est reporté le samedi : 2 jours de récupération avant lundi
+  if (upperBodyJob && sessionId === 'A') {
+    blocks = blocks.map((b) => (['pompes', 'rowing', 'tractions'].includes(b.ex) ? { ...b, sets: b.sets + 1 } : b));
   }
   return blocks;
 }

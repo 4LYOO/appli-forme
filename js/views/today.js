@@ -7,7 +7,7 @@ import { QUESTIONS, computeScore, recommend } from '../lib/score.js';
 import { SLOTS, slotById, slotTargets, currentSlot } from '../lib/nutrition.js';
 import { computeStreak, regularity } from '../lib/streak.js';
 import { fmtDuration } from '../lib/sleep.js';
-import { getDay, metDates, habitsForSlot, getNight, DEFAULT_INTENTIONS, maybeRunWeekly, undoWeekly, dayPlan, logAdjustment, getProfile, getTargets, computeInitial, saveProfileAndTargets } from '../state.js';
+import { goalData, getDay, metDates, habitsForSlot, getNight, DEFAULT_INTENTIONS, maybeRunWeekly, undoWeekly, dayPlan, logAdjustment, getProfile, getTargets, computeInitial, saveProfileAndTargets } from '../state.js';
 import { reviewSheet, reviewDue } from './review.js';
 import { go, refresh } from '../main.js';
 import { repeatMeal, openAdd, loadFoods, logOption } from './meals.js';
@@ -37,6 +37,7 @@ export async function render(root, params) {
     reviewCard(),
     await hero(day, t, checkin, night, date, P),
     rings(day, t),
+    await capRow(),
     planCard(P, date),
     await skippedCard(P),
     dayCard(day, checkin, st, met, date, first),
@@ -58,6 +59,18 @@ async function welcome() {
   return card;
 }
 
+// ---------- Le cap : 65 kg, puis au-delà ----------
+async function capRow() {
+  const g = await goalData().catch(() => null);
+  if (!g) return null;
+  const mois = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return h('button.card.cap-row', { onclick: () => go('poids'), 'aria-label': `Cap ${g.goal} kilos` },
+    h('div.cap-top', h('strong', `Cap ${fmt.kg(g.goal, 0)} kg`),
+      h('span.small.muted', g.remaining > 0 ? `${fmt.kg(g.remaining)} kg à prendre${g.eta ? ` · ≈ ${mois(g.eta)}` : ''}` : 'Atteint')),
+    h('div.cap-bar', h('div', { style: { width: `${Math.round(g.pct * 100)}%` } })),
+    h('div.small.muted', g.weighed ? `${fmt.kg(g.currentKg)} kg (tendance) · ${g.gained >= 0 ? '+' : ''}${fmt.kg(g.gained)} kg depuis le départ` : 'Pèse-toi de temps en temps pour suivre ta progression'));
+}
+
 // ---------- Une fois : métier physique et énergie active de l'app Santé ----------
 async function jobCard() {
   const p = await getProfile();
@@ -76,19 +89,21 @@ async function jobCard() {
       done();
     } catch { /* bandeau d'erreur */ }
   };
-  const same = cur && Math.abs(cur.kcal - t.kcal) < 30;
+  // Objectif : prendre du poids. Une nouvelle estimation ne fait jamais baisser l'objectif ; seule la balance le peut.
+  const kcal = Math.max(cur?.kcal ?? 0, t.kcal);
   return h('div.card',
     h('div.card-head', h('h2', 'Ton métier pris en compte'), why('travail_physique')),
     h('p.small', 'Monteur chaussure 5 j/7 et ≈ 260 kcal d\'énergie active par jour (moyenne octobre-novembre de l\'app Santé).'),
     h('ul.small.stack-sm', { style: { margin: '6px 0', paddingLeft: '18px' } },
       h('li', `Vie courante : ${d.base} kcal`), h('li', `Pas (app Santé) : ${d.pas} kcal`),
       h('li', `Travail manuel (moyenne sur 7 j) : ${d.travail} kcal`), h('li', `Séances (moyenne) : ${d.seances} kcal`),
-      h('li', h('strong', `Dépense ≈ ${t.maintenance} kcal → objectif ${t.kcal} kcal`), cur ? ` (actuel : ${cur.kcal})` : '')),
-    h('p.small.muted', 'Côté séance : tes bras travaillent déjà toute la semaine, donc la mini-séance de semaine passe aux jambes et au tronc, et le dimanche allège un peu le haut.'),
+      h('li', h('strong', `Dépense ≈ ${t.maintenance} kcal`))),
+    h('p.small', kcal > t.kcal
+      ? `Ton objectif actuel (${kcal} kcal) est déjà au-dessus : il est gardé. Pour prendre du poids, on ne baisse jamais sur une estimation, seulement si la balance montre une prise trop rapide.`
+      : `Objectif : ${kcal} kcal.`),
+    h('p.small.muted', 'Côté séance : la mini-séance de semaine passe aux jambes et au tronc, et une partie du haut du corps passe du dimanche au samedi (même volume, mieux récupéré avant lundi).'),
     h('div.row', { style: { gap: '8px', flexWrap: 'wrap' } },
-      same || !cur ? h('button.btn.btn-primary', { onclick: () => save(t.kcal) }, 'Appliquer')
-        : [h('button.btn.btn-primary', { onclick: () => save(t.kcal) }, `Passer à ${t.kcal} kcal`),
-          h('button.btn', { onclick: () => save(cur.kcal) }, `Garder ${cur.kcal} kcal`)],
+      h('button.btn.btn-primary', { onclick: () => save(kcal) }, 'Valider'),
       h('button.btn.btn-ghost', { onclick: async () => { await db.kvSet('jobCardDone', true).catch(() => {}); go('config'); } }, 'Ajuster')));
 }
 

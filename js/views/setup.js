@@ -77,6 +77,8 @@ export async function render(root) {
         h('label.field', h('span', 'Jours travaillés / semaine'), h('input.input', { type: 'number', inputmode: 'numeric', min: 0, max: 7, value: p.jobDays ?? 5, oninput: (e) => { p.jobDays = Math.min(7, Math.max(0, +e.target.value || 0)); override = null; update(); } }))),
       h('label.row', h('input', { type: 'checkbox', checked: !!p.upperBodyJob, style: { width: '22px', height: '22px', accentColor: 'var(--accent)' }, onchange: (e) => (p.upperBodyJob = e.target.checked) }),
         h('span.grow', 'Mon travail sollicite surtout les bras et le haut du corps')),
+      h('label.field', h('span', 'Cap de poids (kg)'), h('input.input', { type: 'number', inputmode: 'decimal', step: '0.5', value: p.goalKg ?? 65,
+        oninput: (e) => { const v = parseFloat(String(e.target.value).replace(',', '.')); p.goalKg = v > 40 && v < 150 ? v : 65; } })),
       h('label.field', h('span', 'Énergie active moyenne de l\'app Santé (kcal/jour)'), h('input.input', { type: 'number', inputmode: 'numeric', placeholder: 'ex. 232', value: p.healthActive ?? '',
         oninput: (e) => { const v = parseFloat(e.target.value); p.healthActive = v > 0 ? v : null; override = null; update(); } })),
       h('p.tiny.muted', 'App Santé → Activité → Énergie active → moyenne du mois. Les pas ne comptent pas le travail des bras : l\'appli l\'ajoute à part.'),

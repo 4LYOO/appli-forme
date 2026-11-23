@@ -262,6 +262,15 @@ C'est le volume total de la semaine par muscle qui compte, pas le jour où il es
 - Pelland et al., 2024
 - Schoenfeld, Grgic & Krieger, 2019
 
+## Un cap, puis des paliers
+*Preuve modérée* · identifiant `cap`
+
+Un objectif chiffré et daté, découpé en étapes visibles, aide à tenir dans la durée : on suit sa progression au lieu de compter sur la motivation du jour. Au rythme de +0,25 à +0,5 % du poids par semaine (≈ 0,15-0,3 kg pour toi), une bonne part du poids pris est du muscle si tu t'entraînes ; plus vite, c'est surtout du gras. Après 65 kg, l'appli propose des paliers de 3 kg tant que le tour de taille reste stable.
+
+- Harkin et al., 2016 (suivi des progrès et atteinte des objectifs, méta-analyse)
+- Iraki et al., 2019 (surplus en prise de masse)
+- Garthe et al., 2013 (rythme de prise et composition)
+
 ## Métier manuel et dépense réelle
 *Preuve faible* · identifiant `travail_physique`
 

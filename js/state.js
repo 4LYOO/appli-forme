@@ -7,7 +7,7 @@ import { trendSeries } from './lib/weight.js';
 export const DEFAULT_PROFILE = {
   sex: 'H', birthdate: '2002-12-09', heightCm: 184, weightKg: 58, activity: 'modere',
   eggs: true, dairy: true, bedtime: '22:30', wake: '06:00', sessionTime: '10:00',
-  job: 'Monteur chaussure', physicalJob: true, jobDays: 5, upperBodyJob: true, healthActive: 260,
+  job: 'Monteur chaussure', physicalJob: true, jobDays: 5, upperBodyJob: true, healthActive: 260, goalKg: 65,
 };
 
 export const DEFAULT_INTENTIONS = [
@@ -35,6 +35,20 @@ export async function saveProfileAndTargets(profile, targets, reason) {
   }
   if (!(await db.kvGet('firstDay'))) ops.push(['kv', 'put', { k: 'firstDay', v: date }]);
   await db.batch(ops);
+}
+
+/** Données du cap de poids : départ, poids actuel (tendance si pesées), rythme mesuré. */
+export async function goalData() {
+  const { goalProgress } = await import('./lib/goal.js');
+  const { trendSeries, weeklyRate } = await import('./lib/weight.js');
+  const p = (await getProfile()) || {};
+  const entries = (await db.getAll('weights')).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const last = trendSeries(entries).at(-1);
+  const today = todayISO();
+  const r = weeklyRate(entries, today, 14);
+  const startKg = p.startKg ?? entries[0]?.kg ?? p.weightKg ?? 58;
+  const currentKg = last?.trend ?? p.weightKg ?? startKg;
+  return { ...goalProgress({ startKg, currentKg, goalKg: p.goalKg ?? 65, rate: r.ok ? r.rate : null, today }), currentKg, startKg, weighed: !!last };
 }
 
 export const ageNow = (p) => ageOn(p.birthdate, todayISO());
