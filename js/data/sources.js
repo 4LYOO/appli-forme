@@ -172,6 +172,11 @@ export const SOURCES = {
     text: 'Le code-barres donne le produit exact (marque, recette) et les valeurs de son étiquette, saisies par les contributeurs d\'Open Food Facts. C\'est la saisie la plus précise pour un produit emballé. Le produit est ensuite gardé sur ton iPhone et reste disponible hors ligne.',
     refs: ['Open Food Facts (base libre, licence ODbL)', 'Étiquetage nutritionnel obligatoire : règlement (UE) n° 1169/2011'],
   },
+  budget: {
+    title: 'Prendre du poids avec un petit budget', niveau: 'faible',
+    text: 'Les calories les moins chères sont les féculents secs (riz, pâtes, flocons d\'avoine, farine), les légumineuses sèches, l\'huile, le lait et le beurre de cacahuète ; les œufs, les lentilles et le lait apportent aussi des protéines à bas prix. Les prix de l\'appli sont des estimations (enseignes discount) : corrige-les avec ceux de ton magasin.',
+    refs: ['Calcul de l\'appli : calories et protéines par euro, à partir de Ciqual et de prix indicatifs', 'Combinaison légumineuses + céréales : Jäger et al., 2017 (ISSN)'],
+  },
   sauvegarde: {
     title: 'Pourquoi sauvegarder chaque semaine', niveau: 'faible',
     text: 'Tes données ne quittent jamais ton iPhone. Si tu supprimes l\'appli de l\'écran d\'accueil ou si iOS fait le ménage, seule une sauvegarde permet de tout récupérer.',

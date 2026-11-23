@@ -270,6 +270,14 @@ Le code-barres donne le produit exact (marque, recette) et les valeurs de son é
 - Open Food Facts (base libre, licence ODbL)
 - Étiquetage nutritionnel obligatoire : règlement (UE) n° 1169/2011
 
+## Prendre du poids avec un petit budget
+*Preuve faible* · identifiant `budget`
+
+Les calories les moins chères sont les féculents secs (riz, pâtes, flocons d'avoine, farine), les légumineuses sèches, l'huile, le lait et le beurre de cacahuète ; les œufs, les lentilles et le lait apportent aussi des protéines à bas prix. Les prix de l'appli sont des estimations (enseignes discount) : corrige-les avec ceux de ton magasin.
+
+- Calcul de l'appli : calories et protéines par euro, à partir de Ciqual et de prix indicatifs
+- Combinaison légumineuses + céréales : Jäger et al., 2017 (ISSN)
+
 ## Pourquoi sauvegarder chaque semaine
 *Preuve faible* · identifiant `sauvegarde`
 

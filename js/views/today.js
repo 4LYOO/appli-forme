@@ -109,6 +109,7 @@ async function hero(day, t, checkin, night, date, P) {
       h('button.btn', { onclick: () => openAdd({ date: day.date, slot: sid }) }, icon('plus'), 'Ajouter')),
     habits.length ? h('div.quick-repeat', habits.map((hb) => h('button', { onclick: async () => { await repeatMeal(hb.last, day.date, sid); refresh(); } },
       icon('repeat'), `${short(hb.name)} · ${fmt.int(hb.last.total.kcal)}`))) : null,
+    h('button.why', { style: { display: 'block' }, onclick: () => go('idees') }, 'Pas d\'idée ? Voir les idées repas ›'),
     intent ? h('div.intention', `« ${intent.text} »`) : null,
     ...P.plan.filter((x) => slotById(x.id).main && x.id !== sid && slotById(x.id).time < s.time).map((x) =>
       h('button.why', { style: { display: 'block', marginTop: '8px' }, onclick: () => openAdd({ date: day.date, slot: x.id }) }, `Tu as oublié de noter ton ${slotById(x.id).label.toLowerCase()} ?`)));

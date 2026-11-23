@@ -2,17 +2,19 @@
 import * as db from './db.js';
 import { h, banner, removeBanner, clear, toast } from './ui.js';
 import { todayISO, diffDays, relativeDays } from './lib/dates.js';
-import { ICONS } from './icons.js';
+import { ICONS, icon } from './icons.js';
 
 document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = ICONS[el.dataset.icon]; });
 
-export const APP_VERSION = '1.6.0';
+export const APP_VERSION = '1.7.0';
 
 const VIEWS = {
   aujourdhui: () => import('./views/today.js'),
   repas: () => import('./views/meals.js'),
   seance: () => import('./views/training.js'),
   poids: () => import('./views/weight.js'),
+  idees: () => import('./views/ideas.js'),
+  courses: () => import('./views/courses.js'),
   plus: () => import('./views/more.js'),
   config: () => import('./views/setup.js'),
 };
@@ -31,6 +33,8 @@ const ALIASES = {
   sauvegarde: ['plus', { section: 'sauvegarde' }],
   rappels: ['plus', { section: 'rappels' }],
   bilan: ['aujourdhui', {}],
+  recettes: ['idees', {}],
+  liste: ['courses', {}],
 };
 
 let current = null;
@@ -64,6 +68,13 @@ async function route(keepScroll = false) {
   try { await mod.render(frag, params); }
   catch (e) { console.error(e); frag.append(h('div.card', h('h2', 'Oups'), h('p.muted', `Erreur d'affichage : ${e.message}`))); }
   if (current !== page) return;
+  // Réglages : bulle en haut à droite de chaque écran (comme un profil)
+  const head = frag.querySelector('.page-head');
+  if (head && page !== 'plus' && page !== 'config') {
+    head.append(h('button.avatar-btn', { 'aria-label': 'Profil et réglages', onclick: () => go('plus') }, icon('user')));
+  } else if (head && page === 'plus') {
+    head.prepend(h('button.icon-btn', { 'aria-label': 'Retour', onclick: () => (history.length > 1 ? history.back() : go('aujourdhui')) }, '‹'));
+  }
   clear(root).append(...frag.childNodes);
   window.scrollTo(0, keepScroll ? y : 0);
 }

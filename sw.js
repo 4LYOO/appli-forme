@@ -33,6 +33,9 @@ const ASSETS = [
   './js/data/exercises.js',
   './js/data/plates.js',
   './js/data/sources.js',
+  './js/data/recipes.js',
+  './js/data/shop.js',
+  './js/lib/shopping.js',
   './js/views/today.js',
   './js/views/meals.js',
   './js/views/weight.js',
@@ -40,6 +43,8 @@ const ASSETS = [
   './js/views/more.js',
   './js/views/setup.js',
   './js/views/review.js',
+  './js/views/ideas.js',
+  './js/views/courses.js',
 ];
 
 self.addEventListener('install', (e) => {

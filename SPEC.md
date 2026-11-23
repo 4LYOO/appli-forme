@@ -4,7 +4,7 @@
 > Ce document est la référence du projet. Il est tenu à jour à chaque phase.
 > En cas de conflit entre les chiffres de la section « Fonctionnalités » et ceux de la section « Exigence de qualité et base scientifique », **cette dernière prévaut** (voir aussi RECHERCHE.md).
 
-Statut : **v1.6 — base d'aliments Ciqual 2020** (voir §10).
+Statut : **v1.7 — Idées repas, Courses, pesées occasionnelles** (voir §10).
 
 ---
 
@@ -64,6 +64,12 @@ Statut : **v1.6 — base d'aliments Ciqual 2020** (voir §10).
 - **Photo des plats** : « je prends en photo, j'indique ce que c'est et ça l'enregistre ».
 - Objectifs : gardés tels quels.
 - Journal de sommeil : il exporte une **note texte** (pas un CSV), format « Nuit se terminant le JJ/MM/AAAA » + lignes « libellé : valeur ».
+
+### Retours après une semaine d'utilisation (23/11/2026)
+- Pas de balance pour l'instant ; très peu d'argent : gérer la nourriture avec le temps et l'argent disponibles.
+- « Plus » déplacé dans une bulle en haut à droite (comme un profil) pour libérer la barre du bas.
+- Nouvel onglet **Idées repas** : je ne sais pas quoi manger → beaucoup de choix, simples, par petit-déj / collations / déjeuner / dîner, avec recettes.
+- Nouvel onglet **Courses** : liste simple à partir des repas choisis pour la semaine, prix indiqués pour prévoir, économique, toujours au service de la prise de masse.
 
 ## 5. Règles scientifiques (détail et niveaux de preuve dans RECHERCHE.md)
 - Prise de poids cible ≈ 0,25 à 0,5 % du poids/semaine, surplus 10-20 % au-dessus de la maintenance ; débutant : haut de fourchette acceptable ; surveiller le tour de taille.
@@ -133,6 +139,10 @@ Statut : **v1.6 — base d'aliments Ciqual 2020** (voir §10).
 | D37 | **Code-barres → Open Food Facts** : photo du code-barres décodée sur l'iPhone (zxing-wasm, embarqué, hors ligne), produit exact (marque, valeurs de l'étiquette) récupéré gratuitement sur Open Food Facts, puis **gardé sur l'iPhone** (magasin « products ») : retrouvable par la recherche, même hors ligne. Saisie manuelle des chiffres si la photo est illisible. | Précision maximale pour les produits emballés, gratuit, sans compte. |
 | D38 | ~~Reconnaissance IA par photo~~ **retirée en v1.5** à la demande de l'utilisateur : elle demandait une clé d'API payante. Règle : **aucune fonction ne doit engendrer de coût**. Remplacée par la recherche gratuite par nom dans Open Food Facts (produits de marque) en plus du code-barres. | « Enlève tout ce qui engendre des coûts supplémentaires » (16/11/2026). |
 | D39 | **Ciqual 2020 intégré (22/11/2026)** : 123 aliments sur 140 avec les valeurs Ciqual, par correspondance choisie à la main (`tools/ciqual_map.json`, plus de rapprochement automatique : il faisait des erreurs, ex. beurre → haricot beurre). Source : copie SQL de la table sur data.gouv.fr (site de l'ANSES en maintenance), vérifiée (3 186 aliments, colonnes officielles) ; énergie manquante recalculée selon le règlement (UE) n° 1169/2011 (écart médian 0,2 % là où on peut comparer). 17 aliments sans équivalent fiable gardent une valeur estimée. À revérifier sur le fichier officiel quand ciqual.anses.fr sera de retour. | Demande de l'utilisateur. |
+| D40 | **Navigation** : 6 onglets (Accueil, Repas, Idées, Courses, Séance, Poids) ; réglages dans une bulle « profil » en haut à droite de chaque écran, avec retour. | Demande de l'utilisateur. |
+| D41 | **Idées repas** : 69 recettes végétariennes bon marché (15 petits-déj, 18 collations, 18 déjeuners à emporter, 18 dîners). Calories, protéines et **prix par portion calculés** (Ciqual + prix indicatifs). Filtres ≤ 10 min, petit prix, à emporter, sans cuisson, protéiné, pour plusieurs jours ; tri « Pour toi » (calories et protéines par euro, puis temps), moins cher, rapide, + kcal ; « Choisis pour moi » au hasard ; « Je le mange » (noté) ou « + Courses ». Catégorie par défaut selon l'heure. | Demande de l'utilisateur. |
+| D42 | **Courses** : repas choisis → produits à acheter arrondis au conditionnement (un paquet entamé couvre d'abord le panier de base, dépassement ≤ 15 % toléré), regroupés par rayon, cochables, « déjà à la maison » (non compté), prix modifiables (gardés pour la suite), produits ajoutés à la main, budget hebdomadaire, part des besoins caloriques de la semaine couverte, partage de la liste, « panier de base petit budget » (≈ 31 € pour ≈ 2 870 kcal et 125 g de protéines par jour), produits les plus rentables (kcal et protéines par euro), et une fiche « Aides alimentaires ». Prix indicatifs d'enseignes discount, fin 2026. | Petit budget, prise de masse. |
+| D43 | **Sans balance** : si moins de 8 pesées sur 28 jours, la dépense est estimée sur 6 semaines avec des pesées occasionnelles (≥ 3 pesées sur ≥ 21 jours), confiance plafonnée (jamais « bonne »). Simulation : une pesée par semaine → estimation plus lente (−10 % après 8 semaines au lieu de −3 %). Carte « Pas de balance ? » dans Poids (pharmacie, salle, proche ; mêmes conditions ; mètre ruban). | Pas de balance pour l'instant. |
 | D14 | Écriture IndexedDB **vérifiée** (transaction `oncomplete`), bandeau d'erreur rouge persistant sinon ; vérification au démarrage que le stockage est persistant, avec avertissement si refusé (sur iOS, l'installation sur l'écran d'accueil est nécessaire). | « Aucune perte silencieuse ». |
 
 ## 9. Points ouverts
@@ -150,4 +160,5 @@ Statut : **v1.6 — base d'aliments Ciqual 2020** (voir §10).
 | 1.4 | Code-barres → Open Food Facts ; produits gardés hors ligne ; boissons chaudes ajoutées | ✅ |
 | 1.5 | Retrait de la reconnaissance IA (payante) ; recherche gratuite par nom dans Open Food Facts | ✅ |
 | 1.6 | Valeurs Ciqual 2020 pour 123 aliments | ✅ |
+| 1.7 | Onglets Idées repas et Courses, bulle réglages, pesées occasionnelles | ✅ |
 | 3 | Corrélations personnelles, horaires de rappel adaptés, Web Push (Cloudflare Workers) | à faire |
