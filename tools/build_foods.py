@@ -149,6 +149,17 @@ F = [
  ('Légumes', 'Maïs doux', 100, 3, 16, 1.5, [['Petite boîte (½)', 70], ['Petite boîte', 140]], ''),
  ('Légumes', 'Champignons cuits', 30, 3, 1, 0.8, 'legume', ''),
  ('Légumes', 'Soupe de légumes', 35, 1, 5, 1.2, [['1 bol', 300], ['1 grand bol', 450]], ''),
+ # Ingrédients de base pour les recettes
+ ('Légumes', 'Oignon', 40, 1.2, 7.5, 0.2, [['1/2 oignon', 50], ['1 oignon', 100]], ''),
+ ('Légumes', 'Ail', 111, 6, 21, 0.5, [['1 gousse', 5]], ''),
+ ('Légumes', 'Carotte crue', 40, 0.6, 7.6, 0.3, [['1 carotte', 100]], ''),
+ ('Légumes', 'Poivron', 30, 0.9, 5, 0.3, [['1/2 poivron', 75], ['1 poivron', 150]], ''),
+ ('Légumes', 'Petits pois surgelés cuits', 78, 5.4, 10, 0.7, 'legume', ''),
+ ('Légumes', 'Tomates concassées en conserve', 26, 1.2, 4, 0.2, [['1/2 boîte', 200], ['1 boîte', 400]], ''),
+ ('Légumes', 'Concentré de tomate', 99, 4.5, 15, 0.5, [['1 c. à soupe', 15]], ''),
+ ('Féculents', 'Farine de blé', 350, 10, 72, 1.2, [['1 c. à soupe', 10], ['100 g', 100], ['250 g', 250]], ''),
+ ('Matières grasses & sauces', 'Lait de coco', 188, 1.6, 3, 19, [['1/4 boîte', 100], ['1/2 boîte', 200]], 'dense'),
+ ('Sucré', 'Cacao en poudre non sucré', 387, 20, 30, 20, [['1 c. à soupe', 8]], ''),
  # Matières grasses et sauces
  ('Matières grasses & sauces', 'Huile d\'olive', 900, 0, 0, 100, 'huile', 'dense'),
  ('Matières grasses & sauces', 'Huile de colza', 900, 0, 0, 100, 'huile', 'dense'),

@@ -1,9 +1,5 @@
 # Correspondances avec la table Ciqual
 
-Table utilisée : **Ciqual 2020 (ANSES)**, 3 186 aliments. Le site ciqual.anses.fr étant en maintenance (16 au 22/11/2026), elle a été lue depuis une copie au format SQL déposée sur data.gouv.fr (ressource communautaire du jeu de données officiel « Table de composition nutritionnelle des aliments Ciqual »). Contrôles : même nombre d'aliments et mêmes colonnes que la table officielle. Dans cette copie, l'énergie manque pour 888 lignes : elle est alors recalculée avec les coefficients du règlement (UE) n° 1169/2011 (sur les 2 153 aliments où les deux existent, écart médian 0,2 %, 93 % à moins de 3 %).
-
-Correspondances choisies à la main (tools/ciqual_map.json). « ⚠ » = la valeur Ciqual diffère nettement de l'ancienne estimation (la valeur Ciqual est retenue).
-
 Source : ciqual2020.csv — 3186 aliments lus.
 
 | Aliment de l'appli | Aliment Ciqual retenu | Confiance | kcal avant → après |
@@ -112,6 +108,16 @@ Source : ciqual2020.csv — 3186 aliments lus.
 | Maïs doux | Maïs doux, appertisé, égoutté | 1.00 | 100 → 106 |
 | Champignons cuits | Champignon de Paris ou champignon de couche, bouilli/cuit à l'eau | 1.00 | 30 → 29 |
 | Soupe de légumes | Soupe aux légumes variés, préemballée à réchauffer | 1.00 | 35 → 39 |
+| Oignon | Oignon, cru (énergie recalculée) | 1.00 | 40 → 36 |
+| Ail | Ail, cru | 1.00 | 111 → 111 |
+| Carotte crue | Carotte, crue | 1.00 | 40 → 40 |
+| Poivron | Poivron rouge, cru | 1.00 | 30 → 37 |
+| Petits pois surgelés cuits | Petits pois, surgelés, cuits (énergie recalculée) | 1.00 | 78 → 55 |
+| Tomates concassées en conserve | Tomate, pulpe, appertisée | 1.00 | 26 → 26 |
+| Concentré de tomate | Tomate, concentré, appertisé | 1.00 | 99 → 99 |
+| Farine de blé | Farine de blé tendre ou froment T55 (pour pains) | 1.00 | 350 → 350 |
+| Lait de coco | Lait de coco ou Crème de coco | 1.00 | 188 → 188 |
+| Cacao en poudre non sucré | Cacao, non sucré, poudre soluble | 1.00 | 387 → 387 |
 | Huile d'olive | Huile d'olive vierge extra | 1.00 | 900 → 900 |
 | Huile de colza | Huile de colza | 1.00 | 900 → 900 |
 | Beurre | Beurre à 82% MG, doux | 1.00 | 745 → 753 |
