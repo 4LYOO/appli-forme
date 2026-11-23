@@ -17,14 +17,37 @@ export function mifflin({ sex = 'H', weightKg, heightCm, age }) {
 export const round10 = (x) => Math.round(x / 10) * 10;
 
 /**
+ * Dépense détaillée (plus précise que le seul facteur d'activité quand on connaît son activité réelle) :
+ *  - métabolisme de base × 1,2 : base + digestion (≈ 10 %) + petits gestes du quotidien ;
+ *  - énergie active de l'app Santé (pas, marche) : moyenne par jour ;
+ *  - travail manuel physique, non compté par les pas (bras, port de charges, station debout) : ≈ 250 kcal par jour travaillé ;
+ *  - séances : ≈ 250 kcal par séance de 45 min au poids du corps.
+ * Valeurs moyennes par jour sur la semaine. Estimations (preuve faible) : l'adaptation recale ensuite sur tes données.
+ */
+export function maintenanceDetailed({ bmr, healthActive = 0, physicalJobDays = 0, sessionsPerWeek = 2, jobKcal = 250, sessionKcal = 250 }) {
+  const parts = [
+    { id: 'base', label: 'Métabolisme de base et digestion', kcal: Math.round(bmr * 1.2) },
+    { id: 'pas', label: 'Marche et pas (app Santé)', kcal: Math.round(healthActive) },
+    { id: 'travail', label: `Travail physique (${physicalJobDays} j/7)`, kcal: Math.round((jobKcal * physicalJobDays) / 7) },
+    { id: 'seances', label: `Séances (${sessionsPerWeek}/sem)`, kcal: Math.round((sessionKcal * sessionsPerWeek) / 7) },
+  ];
+  return { total: parts.reduce((t, p) => t + p.kcal, 0), parts };
+}
+
+/**
  * Objectifs de départ.
  * Surplus = 15 % de la maintenance, borné à 300-500 kcal (SPEC D1).
  * Protéines = g/kg × poids (défaut 2,0 g/kg : haut de fourchette conseillé chez le végétarien).
  */
-export function initialTargets({ sex, weightKg, heightCm, age, activity = 'modere', surplusPct = 0.15, proteinPerKg = 2.0 }) {
+export function initialTargets({ sex, weightKg, heightCm, age, activity = 'modere', surplusPct = 0.15, proteinPerKg = 2.0, healthActive = null, physicalJobDays = 0, sessionsPerWeek = 2 }) {
   const bmr = mifflin({ sex, weightKg, heightCm, age });
-  const factor = (ACTIVITY_LEVELS.find((a) => a.id === activity) || ACTIVITY_LEVELS[2]).factor;
-  const maintenance = bmr * factor;
+  let factor = (ACTIVITY_LEVELS.find((a) => a.id === activity) || ACTIVITY_LEVELS[2]).factor;
+  let maintenance = bmr * factor, detail = null;
+  if (healthActive != null && healthActive > 0) {
+    detail = maintenanceDetailed({ bmr, healthActive, physicalJobDays, sessionsPerWeek });
+    maintenance = detail.total;
+    factor = Math.round((maintenance / bmr) * 100) / 100;
+  }
   const surplus = Math.min(500, Math.max(300, maintenance * surplusPct));
   return {
     bmr: Math.round(bmr),
@@ -34,6 +57,7 @@ export function initialTargets({ sex, weightKg, heightCm, age, activity = 'moder
     kcal: round10(maintenance + surplus),
     proteinPerKg,
     protein: Math.round(proteinPerKg * weightKg),
+    detail,
   };
 }
 

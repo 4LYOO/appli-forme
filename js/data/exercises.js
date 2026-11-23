@@ -193,18 +193,33 @@ export const MOBILITY = [
   { name: 'Squat profond tenu (tenir une porte si besoin)', sec: 60 },
   { name: 'Ouverture de poitrine contre un chambranle', sec: 60 },
   { name: 'Ischios : jambe tendue sur une chaise (chaque côté)', sec: 60 },
+  { name: 'Avant-bras : paume vers l\'avant, tire doucement les doigts vers toi (chaque bras)', sec: 60 },
+  { name: 'Avant-bras : poing fermé vers le bas, plie le poignet (chaque bras)', sec: 60 },
   { name: 'Respiration lente allongé (inspire 4 s, expire 6 s)', sec: 90 },
 ];
 
-/** Blocs d'une séance selon le matériel disponible (les blocs « replaces » remplacent l'exercice sans matériel). */
-export function sessionBlocks(sessionId, equipment = []) {
+// Exercices qui sollicitent bras, épaules et prise (déjà très utilisés par un métier manuel du haut du corps)
+export const UPPER = new Set(['pompes', 'pompes_serrees', 'pike', 'rowing', 'superman', 'tractions', 'curl_elastique', 'facepull']);
+
+/**
+ * Blocs d'une séance selon le matériel disponible (les blocs « replaces » remplacent l'exercice sans matériel).
+ * upperBodyJob : métier qui fatigue le haut du corps. La séance B (dimanche, veille de travail) retire 1 série
+ * à chaque exercice du haut (minimum 2) et ajoute 1 série au squat et au pont : le volume hebdomadaire du haut
+ * reste proche de 8-10 séries grâce au travail, celui des jambes (grands muscles, plus de masse) augmente.
+ */
+export function sessionBlocks(sessionId, equipment = [], { upperBodyJob = false } = {}) {
   const all = SESSIONS[sessionId].blocks;
   const active = all.filter((b) => !b.requires || equipment.includes(b.requires));
   const replaced = new Set(active.filter((b) => b.replaces).map((b) => b.replaces));
-  return active.filter((b) => !replaced.has(b.ex)).sort((a, b) => a.pair - b.pair);
+  let blocks = active.filter((b) => !replaced.has(b.ex)).sort((a, b) => a.pair - b.pair);
+  if (upperBodyJob && sessionId === 'B') {
+    blocks = blocks.map((b) => (UPPER.has(b.ex) ? { ...b, sets: Math.max(2, b.sets - 1) } : ['squat', 'pont'].includes(b.ex) ? { ...b, sets: b.sets + 1 } : b));
+  }
+  return blocks;
 }
 
 export const WARMUP = [
+  'Cercles des poignets et ouverture-fermeture des mains, 30 s',
   'Cercles de bras, 30 s',
   '10 squats lents',
   '6-8 pompes faciles (mains sur une table)',

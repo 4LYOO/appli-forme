@@ -7,7 +7,7 @@ import { QUESTIONS, computeScore, recommend } from '../lib/score.js';
 import { SLOTS, slotById, slotTargets, currentSlot } from '../lib/nutrition.js';
 import { computeStreak, regularity } from '../lib/streak.js';
 import { fmtDuration } from '../lib/sleep.js';
-import { getDay, metDates, habitsForSlot, getNight, DEFAULT_INTENTIONS, maybeRunWeekly, undoWeekly, dayPlan, logAdjustment } from '../state.js';
+import { getDay, metDates, habitsForSlot, getNight, DEFAULT_INTENTIONS, maybeRunWeekly, undoWeekly, dayPlan, logAdjustment, getProfile, getTargets, computeInitial, saveProfileAndTargets } from '../state.js';
 import { reviewSheet, reviewDue } from './review.js';
 import { go, refresh } from '../main.js';
 import { repeatMeal, openAdd, loadFoods, logOption } from './meals.js';
@@ -32,6 +32,7 @@ export async function render(root, params) {
       h('div', h('h1', 'Aujourd\'hui'), h('div.sub', longDate(date))),
       h('button.pill-chip', { onclick: () => showWhy(['habitudes', 'journee_minimale']), 'aria-label': `Série : ${st.streak} jours` }, icon('flame'), String(st.streak))),
     await welcome(),
+    await jobCard(),
     await weeklyCard(),
     reviewCard(),
     await hero(day, t, checkin, night, date, P),
@@ -40,7 +41,7 @@ export async function render(root, params) {
     await skippedCard(P),
     dayCard(day, checkin, st, met, date, first),
     checkin ? await scoreRow(date, checkin, night) : null,
-    tip(day, t));
+    tip(day, t, await getProfile(), date));
 
   if (params.focus === 'questionnaire') setTimeout(() => checkinSheet(date, checkin, day.weight, night), 50);
 }
@@ -55,6 +56,40 @@ async function welcome() {
       h('p', h('strong', '2. À chaque prise : '), 'une photo ou un tap. Le bouton du haut te montre toujours la prochaine.'),
       h('p', h('strong', '3. Le week-end : '), 'les deux séances, dans l\'onglet Séance.')));
   return card;
+}
+
+// ---------- Une fois : métier physique et énergie active de l'app Santé ----------
+async function jobCard() {
+  const p = await getProfile();
+  if (!p || p.healthActive != null || (await db.kvGet('jobCardDone'))) return null;
+  const cur = await getTargets();
+  const np = { ...p, job: 'Monteur chaussure', physicalJob: true, jobDays: 5, upperBodyJob: true, healthActive: 260 };
+  const t = computeInitial(np);
+  const d = Object.fromEntries(t.detail.parts.map((x) => [x.id, x.kcal]));
+  const done = async () => { await db.kvSet('jobCardDone', true).catch(() => {}); refresh(); };
+  const save = async (kcal) => {
+    try {
+      const targets = { ...cur, ...t, kcal, protein: cur?.protein ?? t.protein, proteinPerKg: cur?.proteinPerKg ?? t.proteinPerKg, source: 'formule' };
+      await saveProfileAndTargets(np, targets, `Dépense détaillée : base ${d.base} + pas ${d.pas} + travail manuel ${d.travail} + séances ${d.seances} ≈ ${t.maintenance} kcal (app Santé : 289 kcal en octobre, 232 en novembre → 260 retenues).`);
+      await logAdjustment('Programme adapté à ton métier', 'Mini-séance de semaine : jambes et tronc. Séance du dimanche : 1 série de moins pour le haut, 1 de plus pour les jambes. Étirements des avant-bras ajoutés.', 'programme');
+      toast('Profil mis à jour');
+      done();
+    } catch { /* bandeau d'erreur */ }
+  };
+  const same = cur && Math.abs(cur.kcal - t.kcal) < 30;
+  return h('div.card',
+    h('div.card-head', h('h2', 'Ton métier pris en compte'), why('travail_physique')),
+    h('p.small', 'Monteur chaussure 5 j/7 et ≈ 260 kcal d\'énergie active par jour (moyenne octobre-novembre de l\'app Santé).'),
+    h('ul.small.stack-sm', { style: { margin: '6px 0', paddingLeft: '18px' } },
+      h('li', `Vie courante : ${d.base} kcal`), h('li', `Pas (app Santé) : ${d.pas} kcal`),
+      h('li', `Travail manuel (moyenne sur 7 j) : ${d.travail} kcal`), h('li', `Séances (moyenne) : ${d.seances} kcal`),
+      h('li', h('strong', `Dépense ≈ ${t.maintenance} kcal → objectif ${t.kcal} kcal`), cur ? ` (actuel : ${cur.kcal})` : '')),
+    h('p.small.muted', 'Côté séance : tes bras travaillent déjà toute la semaine, donc la mini-séance de semaine passe aux jambes et au tronc, et le dimanche allège un peu le haut.'),
+    h('div.row', { style: { gap: '8px', flexWrap: 'wrap' } },
+      same || !cur ? h('button.btn.btn-primary', { onclick: () => save(t.kcal) }, 'Appliquer')
+        : [h('button.btn.btn-primary', { onclick: () => save(t.kcal) }, `Passer à ${t.kcal} kcal`),
+          h('button.btn', { onclick: () => save(cur.kcal) }, `Garder ${cur.kcal} kcal`)],
+      h('button.btn.btn-ghost', { onclick: async () => { await db.kvSet('jobCardDone', true).catch(() => {}); go('config'); } }, 'Ajuster')));
 }
 
 // ---------- Ajustement automatique de la semaine ----------
@@ -248,12 +283,20 @@ export async function checkinSheet(date, prev, weight, night) {
 }
 
 // ---------- Un conseil ----------
-function tip(day, t) {
+function tip(day, t, p = {}, date) {
   const m = nowMinutes();
+  const workday = p?.physicalJob && !isWeekend(date);
   let tp;
   if (m >= 18 * 60 && day.totals.p < t.protein * 0.6) tp = { text: `Il te manque ${fmt.int(t.protein - day.totals.p)} g de protéines : un grand fromage blanc ou skyr ce soir en apporte 30.`, src: 'coucher' };
   else if (m >= 15 * 60 && day.totals.kcal < t.kcal * 0.4) tp = { text: 'En retard sur les calories : un smoothie lait-banane-avoine-beurre de cacahuète apporte ≈ 650 kcal sans te remplir.', src: 'liquides' };
-  else {
+  else if (workday && m >= 9 * 60 && m < 17 * 60) {
+    const rotJob = [
+      { text: 'Jour de travail : tes collations de 10h et 16h comptent double. Ton métier brûle de l\'énergie, sans elles tu finis la journée en déficit.', src: 'travail_physique' },
+      { text: 'Bois régulièrement à l\'atelier (≈ 1,5-2 L sur la journée) : une gourde à portée de main, une gorgée à chaque pause.', src: 'travail_physique' },
+      { text: 'Avant-bras fatigués le soir ? 2 minutes d\'étirement des poignets (onglet Séance, mobilité) protègent tes tendons.', src: 'travail_physique' },
+    ];
+    tp = rotJob[Math.floor(Date.now() / 86400000) % rotJob.length];
+  } else {
     const rot = [
       { text: 'Pas besoin de peser : « assiette normale » ou « repas normal » suffit, si tu le fais chaque jour.', src: 'saisie_rapide' },
       { text: 'Une cuillère d\'huile d\'olive ou une poignée de fromage râpé dans ton plat : +100 kcal sans plus de volume.', src: 'densite' },

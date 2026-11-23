@@ -6,7 +6,7 @@ import { ICONS, icon } from './icons.js';
 
 document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = ICONS[el.dataset.icon]; });
 
-export const APP_VERSION = '1.8.0';
+export const APP_VERSION = '1.9.0';
 
 const VIEWS = {
   aujourdhui: () => import('./views/today.js'),
@@ -179,42 +179,69 @@ new MutationObserver(syncIndicator).observe(tabbar, { subtree: true, attributes:
 window.addEventListener('resize', syncIndicator);
 requestAnimationFrame(syncIndicator);
 
-let lastIndex = 0;
 function currentTab() { return TAB_ORDER.indexOf(new URLSearchParams(location.search).get('page') || 'aujourdhui'); }
-async function goTab(i, dir) {
-  if (i < 0 || i >= TAB_ORDER.length) return;
-  const view = document.getElementById('view');
-  await go(TAB_ORDER[i]);
-  view.classList.remove('enter-from-right', 'enter-from-left');
-  void view.offsetWidth;
-  view.classList.add(dir > 0 ? 'enter-from-right' : 'enter-from-left');
-  lastIndex = i;
+const view = document.getElementById('view');
+const W = () => window.innerWidth;
+let animating = false;
+
+/** Transition glissée : l'ancienne page sort pendant que la nouvelle se prépare, puis la nouvelle entre. */
+async function goTab(i, dir, fromX = 0) {
+  if (i < 0 || i >= TAB_ORDER.length || animating) return;
+  animating = true;
+  document.body.classList.add('swiping');
+  const out = view.animate([{ transform: `translate3d(${fromX}px,0,0)`, opacity: 1 }, { transform: `translate3d(${-dir * W() * 0.45}px,0,0)`, opacity: 0 }],
+    { duration: 170, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
+  await Promise.all([out.finished, go(TAB_ORDER[i])]);
+  out.cancel();
+  view.style.transform = '';
+  const inn = view.animate([{ transform: `translate3d(${dir * W() * 0.35}px,0,0)`, opacity: 0 }, { transform: 'translate3d(0,0,0)', opacity: 1 }],
+    { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  await inn.finished.catch(() => {});
+  document.body.classList.remove('swiping');
+  animating = false;
 }
 
-// 1) Glisser horizontalement sur le contenu
+// 1) Glisser horizontalement sur le contenu : la page suit le doigt (1:1), décision à la vitesse ou à la distance
 const NO_SWIPE = '.tabs, .seg, .chart, input, textarea, select, .quick-repeat, .stepper, .qty, .no-swipe, .daybar';
-let sx = 0, sy = 0, st = 0, tracking = false;
-const view = document.getElementById('view');
+let sx = 0, sy = 0, st = 0, lastX = 0, lastT = 0, vx = 0, mode = null, raf = 0, curDx = 0;
 view.addEventListener('touchstart', (e) => {
-  if (e.touches.length !== 1 || document.querySelector('.sheet-wrap') || e.target.closest(NO_SWIPE) || currentTab() < 0) { tracking = false; return; }
-  const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = Date.now(); tracking = true;
+  mode = null;
+  if (animating || e.touches.length !== 1 || document.querySelector('.sheet-wrap') || e.target.closest(NO_SWIPE) || currentTab() < 0) { mode = 'off'; return; }
+  const t = e.touches[0]; sx = lastX = t.clientX; sy = t.clientY; st = lastT = performance.now(); vx = 0; curDx = 0;
 }, { passive: true });
 view.addEventListener('touchmove', (e) => {
-  if (!tracking) return;
+  if (mode === 'off') return;
   const t = e.touches[0], dx = t.clientX - sx, dy = t.clientY - sy;
-  if (Math.abs(dy) > 14 && Math.abs(dy) > Math.abs(dx)) { tracking = false; view.style.transform = ''; return; }
-  if (Math.abs(dx) > 10) { view.style.transition = 'none'; view.style.transform = `translateX(${dx * 0.25}px)`; }
-}, { passive: true });
-view.addEventListener('touchend', (e) => {
-  if (!tracking) return;
-  tracking = false;
-  const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
-  view.style.transition = 'transform 0.2s'; view.style.transform = '';
-  if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6 && Date.now() - st < 700) {
-    const i = currentTab();
-    goTab(dx < 0 ? i + 1 : i - 1, dx < 0 ? 1 : -1);
+  if (!mode) {
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+    mode = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'h' : 'off';
+    if (mode === 'h') document.body.classList.add('swiping');
+    else return;
   }
-}, { passive: true });
+  e.preventDefault(); // geste horizontal : pas de défilement vertical en même temps
+  const now = performance.now();
+  vx = (t.clientX - lastX) / Math.max(1, now - lastT); lastX = t.clientX; lastT = now;
+  const i = currentTab();
+  const edge = (dx > 0 && i === 0) || (dx < 0 && i === TAB_ORDER.length - 1);
+  curDx = edge ? dx * 0.25 : dx; // résistance au bord
+  if (!raf) raf = requestAnimationFrame(() => { raf = 0; view.style.transform = `translate3d(${curDx}px,0,0)`; view.style.opacity = String(1 - Math.min(0.35, Math.abs(curDx) / W() * 0.6)); });
+}, { passive: false });
+view.addEventListener('touchend', () => {
+  if (mode !== 'h') { mode = null; return; }
+  mode = null;
+  cancelAnimationFrame(raf); raf = 0;
+  const i = currentTab(), dir = curDx < 0 ? 1 : -1;
+  const target = i + dir;
+  const go_ = (Math.abs(curDx) > W() * 0.22 || Math.abs(vx) > 0.45) && Math.sign(vx || curDx) === Math.sign(curDx) && target >= 0 && target < TAB_ORDER.length;
+  view.style.opacity = '';
+  if (go_) { const x = curDx; view.style.transform = ''; goTab(target, dir, x); }
+  else {
+    const back = view.animate([{ transform: `translate3d(${curDx}px,0,0)` }, { transform: 'translate3d(0,0,0)' }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    view.style.transform = '';
+    back.finished.then(() => document.body.classList.remove('swiping')).catch(() => {});
+  }
+});
+view.addEventListener('touchcancel', () => { mode = null; view.style.transform = ''; view.style.opacity = ''; document.body.classList.remove('swiping'); });
 
 // 2) Glisser le doigt le long de la barre : l'indicateur suit, l'onglet s'ouvre au relâchement
 let barTarget = null;

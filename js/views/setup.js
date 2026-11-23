@@ -28,8 +28,10 @@ export async function render(root) {
       h('div.kpis',
         h('div.kpi', h('div.label', 'Calories / jour'), h('div.value', fmt.int(kcal), h('span.unit', 'kcal'))),
         h('div.kpi', h('div.label', 'Protéines / jour'), h('div.value', fmt.int(ppk * p.weightKg), h('span.unit', 'g')))),
+      t.detail ? h('div.list', { style: { marginTop: '12px' } }, t.detail.parts.map((x) => h('div.list-item', { style: { minHeight: '40px', padding: '8px 14px' } }, h('span.grow.small', x.label), h('span.small.num', `${fmt.int(x.kcal)} kcal`))),
+        h('div.list-item', { style: { minHeight: '40px', padding: '8px 14px' } }, h('strong.grow.small', 'Dépense estimée'), h('strong.small.num', `${fmt.int(t.maintenance)} kcal`))) : null,
       h('p.small.muted', { style: { marginTop: '12px' } },
-        `Métabolisme de base ${fmt.int(t.bmr)} kcal × ${String(t.factor).replace('.', ',')} = maintenance estimée ${fmt.int(t.maintenance)} kcal, + surplus ${fmt.int(t.surplus)} kcal (15 %). `,
+        t.detail ? `Dépense estimée ${fmt.int(t.maintenance)} kcal + surplus ${fmt.int(t.surplus)} kcal (15 %). ` : `Métabolisme de base ${fmt.int(t.bmr)} kcal × ${String(t.factor).replace('.', ',')} = maintenance estimée ${fmt.int(t.maintenance)} kcal, + surplus ${fmt.int(t.surplus)} kcal (15 %). `,
         `Prise visée : ${fmt.kg(range.min, 2)} à ${fmt.kg(range.max, 2)} kg par semaine. Ces chiffres seront remplacés par ta dépense réelle après 2-3 semaines de saisie.`),
       h('div.grid2', { style: { marginTop: '12px' } },
         h('label.field', h('span', 'Ajuster les calories'), h('input.input', { type: 'number', inputmode: 'numeric', step: 50, value: kcal,
@@ -46,7 +48,9 @@ export async function render(root) {
     const targets = { ...t, kcal, proteinPerKg: ppk, protein: Math.round(ppk * p.weightKg), source: override?.kcal ? 'manuel' : 'formule' };
     const reason = override?.kcal && override.kcal !== t.kcal
       ? `Valeur choisie à la main (formule : ${t.kcal} kcal).`
-      : `Mifflin-St Jeor : ${t.bmr} kcal × ${t.factor} (${ACTIVITY_LEVELS.find((a) => a.id === p.activity).label.toLowerCase()}) = ${t.maintenance} kcal, + ${t.surplus} kcal de surplus. Protéines ${ppk} g/kg × ${p.weightKg} kg.`;
+      : t.detail
+        ? `Dépense détaillée : ${t.detail.parts.map((x) => `${x.label.toLowerCase()} ${x.kcal}`).join(' + ')} ≈ ${t.maintenance} kcal, + ${t.surplus} kcal de surplus. Protéines ${ppk} g/kg × ${p.weightKg} kg.`
+        : `Mifflin-St Jeor : ${t.bmr} kcal × ${t.factor} (${ACTIVITY_LEVELS.find((a) => a.id === p.activity).label.toLowerCase()}) = ${t.maintenance} kcal, + ${t.surplus} kcal de surplus. Protéines ${ppk} g/kg × ${p.weightKg} kg.`;
     try {
       await saveProfileAndTargets(p, targets, reason);
       toast('Profil enregistré');
@@ -64,7 +68,18 @@ export async function render(root) {
       h('label.field', h('span', 'Niveau d\'activité (hors séances)'),
         h('select.input', { onchange: (e) => { p.activity = e.target.value; override = null; update(); } },
           ACTIVITY_LEVELS.map((a) => h('option', { value: a.id, selected: a.id === p.activity }, `${a.label} — ${a.hint}`)))),
-      h('p.tiny.muted', 'Avec tes trajets en train et tes journées dehors, « modérément actif » est un bon départ ; l\'adaptation corrigera.'),
+      h('p.tiny.muted', 'Utilisé seulement si tu ne renseignes pas l\'énergie active ci-dessous.'),
+      h('div.section-title', { style: { margin: '14px 0 4px' } }, 'Mon activité réelle (plus précis)'),
+      h('label.row', h('input', { type: 'checkbox', checked: !!p.physicalJob, style: { width: '22px', height: '22px', accentColor: 'var(--accent)' }, onchange: (e) => { p.physicalJob = e.target.checked; override = null; update(); } }),
+        h('span.grow', 'Travail manuel physique')),
+      h('div.grid2',
+        h('label.field', h('span', 'Métier'), h('input.input', { value: p.job || '', placeholder: 'ex. monteur chaussure', oninput: (e) => (p.job = e.target.value) })),
+        h('label.field', h('span', 'Jours travaillés / semaine'), h('input.input', { type: 'number', inputmode: 'numeric', min: 0, max: 7, value: p.jobDays ?? 5, oninput: (e) => { p.jobDays = Math.min(7, Math.max(0, +e.target.value || 0)); override = null; update(); } }))),
+      h('label.row', h('input', { type: 'checkbox', checked: !!p.upperBodyJob, style: { width: '22px', height: '22px', accentColor: 'var(--accent)' }, onchange: (e) => (p.upperBodyJob = e.target.checked) }),
+        h('span.grow', 'Mon travail sollicite surtout les bras et le haut du corps')),
+      h('label.field', h('span', 'Énergie active moyenne de l\'app Santé (kcal/jour)'), h('input.input', { type: 'number', inputmode: 'numeric', placeholder: 'ex. 232', value: p.healthActive ?? '',
+        oninput: (e) => { const v = parseFloat(e.target.value); p.healthActive = v > 0 ? v : null; override = null; update(); } })),
+      h('p.tiny.muted', 'App Santé → Activité → Énergie active → moyenne du mois. Les pas ne comptent pas le travail des bras : l\'appli l\'ajoute à part.'),
       h('div.grid2',
         h('label.field', h('span', 'Œufs'), h('select.input', { onchange: (e) => (p.eggs = e.target.value === 'oui') }, h('option', { selected: p.eggs }, 'oui'), h('option', { selected: !p.eggs }, 'non'))),
         h('label.field', h('span', 'Produits laitiers'), h('select.input', { onchange: (e) => (p.dairy = e.target.value === 'oui') }, h('option', { selected: p.dairy }, 'oui'), h('option', { selected: !p.dairy }, 'non')))),

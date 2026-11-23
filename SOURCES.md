@@ -262,6 +262,16 @@ C'est le volume total de la semaine par muscle qui compte, pas le jour où il es
 - Pelland et al., 2024
 - Schoenfeld, Grgic & Krieger, 2019
 
+## Métier manuel et dépense réelle
+*Preuve faible* · identifiant `travail_physique`
+
+Ta dépense est estimée par morceaux : métabolisme de base × 1,2 (vie courante), + l'énergie active mesurée par l'app Santé (pas), + environ 250 kcal par jour de travail manuel (gestes répétés des bras, debout), + environ 250 kcal par séance, le tout ramené à la journée. Ce n'est qu'un point de départ : ta courbe de poids corrige ensuite le chiffre chaque semaine. Côté entraînement, tes bras et ton dos travaillent déjà 5 jours sur 7 : la mini-séance de semaine passe aux jambes et au tronc, la séance du dimanche (veille de travail) allège un peu le haut et renforce les jambes, et un étirement des avant-bras est ajouté pour protéger tendons et poignets.
+
+- FAO/WHO/UNU 2004 : niveaux d'activité physique (PAL)
+- Ainsworth et al., 2011 : Compendium des activités physiques
+- Pelland et al., 2024 (volume hebdomadaire par muscle)
+- Prévention des TMS : INRS, gestes répétitifs du membre supérieur
+
 ## Code-barres et Open Food Facts
 *Preuve modérée* · identifiant `off`
 

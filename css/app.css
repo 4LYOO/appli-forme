@@ -437,7 +437,9 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background:
 #tabbar.dragging #tab-indicator { transition: transform 0.12s ease-out; }
 
 /* Transitions entre onglets (glisser) */
-#view { will-change: transform; }
+#view { will-change: transform; touch-action: pan-y; }
+/* Pendant un glissement : pas de flou d'arrière-plan (très coûteux à recalculer à chaque image) */
+body.swiping .card, body.swiping .list, body.swiping .slot, body.swiping .action-tile, body.swiping .btn, body.swiping .avatar-btn { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 #view.enter-from-right { animation: enterR 0.32s cubic-bezier(.2,.8,.2,1); }
 #view.enter-from-left { animation: enterL 0.32s cubic-bezier(.2,.8,.2,1); }
 @keyframes enterR { from { opacity: 0.2; transform: translateX(40px); } to { opacity: 1; transform: none; } }

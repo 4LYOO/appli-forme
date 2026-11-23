@@ -4,7 +4,7 @@
 > Ce document est la référence du projet. Il est tenu à jour à chaque phase.
 > En cas de conflit entre les chiffres de la section « Fonctionnalités » et ceux de la section « Exigence de qualité et base scientifique », **cette dernière prévaut** (voir aussi RECHERCHE.md).
 
-Statut : **v1.8 — design verre renforcé, gestes, catalogue de courses par magasin** (voir §10).
+Statut : **v1.9 — métier manuel pris en compte, glissements fluides** (voir §10).
 
 ---
 
@@ -147,23 +147,6 @@ Statut : **v1.8 — design verre renforcé, gestes, catalogue de courses par mag
 | D45 | **Gestes** : glisser horizontalement sur l'écran passe à l'onglet voisin (ignoré sur les zones qui défilent horizontalement : filtres, segments, courbe, champs) ; glisser le doigt le long de la barre déplace l'indicateur, l'onglet s'ouvre au relâchement ; transition glissée. | Demande de l'utilisateur. |
 | D46 | **Idées : 100 recettes** (22 petits-déj, 25 collations, 26 déjeuners, 27 dîners). Prix par portion selon le magasin choisi. | Demande de l'utilisateur. |
 | D47 | **Courses v2** : résumé (total, anneau « part des besoins », budget), tuiles « Ajouter des produits » / « Ajouter des repas », lignes avec rond à cocher, quantité −/+, « J'en ai », prix modifiable ; **catalogue de 177 produits** à cocher par rayon avec recherche et ajout libre ; **choix du magasin** (E.Leclerc, Carrefour, Intermarché, Super U, Auchan, Lidl, Aldi) : niveau de prix relatif estimé, gamme premier prix indiquée (Eco+, Simpl, Top Budget, Bien vu), quelques produits rares masqués chez les discounters. L'assortiment réel de chaque magasin n'est pas connu : c'est une approximation, signalée. | « Trop brut » ; sélection simple des produits ; tri par magasin. |
-| D14 | Écriture IndexedDB **vérifiée** (transaction `oncomplete`), bandeau d'erreur rouge persistant sinon ; vérification au démarrage que le stockage est persistant, avec avertissement si refusé (sur iOS, l'installation sur l'écran d'accueil est nécessaire). | « Aucune perte silencieuse ». |
-
-## 9. Points ouverts
-- Heure des séances du week-end : 10h par défaut, à confirmer.
-
-## 10. Avancement
-| Phase | Contenu | État |
-|---|---|---|
-| 0 | PWA (manifest, service worker hors ligne), IndexedDB vérifiée, tests Node, déploiement GitHub Actions → Pages | ✅ |
-| 1 | Configuration, Aujourd'hui (questionnaire, score, objectifs, prochain repas, journée minimale, intention, conseil), Repas (portions visuelles, assiettes types, estimation rapide, habitudes, favoris, préparations, photo), Poids (tendance, 7 j, rythme, courbe), Sauvegarde (export/import, rappel hebdo), « Pourquoi ? », guide Raccourcis, historique des ajustements | ✅ |
-| 1b | Séance : programme A/B/mini, 11 exercices à niveaux, saisie répétitions + RIR, minuteur, retour par muscle, volume par muscle, progression automatique, mobilité 10 min | ✅ |
-| 1.1 | Refonte : verre liquide turquoise, Aujourd'hui en une action, ajout de repas en 1 tap, photo → nom → plat mémorisé, import de la note de sommeil | ✅ |
-| 2 | Dépense adaptative dans l'appli, ajustement hebdomadaire expliqué et annulable, diagnostic de stagnation, bilan du dimanche, mensurations + photos de composition, matériel, semaine légère, échauffement | ✅ (Ciqual officiel : en attente du site) |
-| 1.3 | Adaptation quotidienne : rattrapage, répartition dynamique, plan de fin de journée, créneaux sautés, mini-séance ciblée | ✅ |
-| 1.4 | Code-barres → Open Food Facts ; produits gardés hors ligne ; boissons chaudes ajoutées | ✅ |
-| 1.5 | Retrait de la reconnaissance IA (payante) ; recherche gratuite par nom dans Open Food Facts | ✅ |
-| 1.6 | Valeurs Ciqual 2020 pour 123 aliments | ✅ |
-| 1.7 | Onglets Idées repas et Courses, bulle réglages, pesées occasionnelles | ✅ |
-| 1.8 | Verre renforcé et profondeur, gestes, icônes sans emoji, 100 recettes, Courses v2 avec catalogue et magasins | ✅ |
-| 3 | Corrélations personnelles, horaires de rappel adaptés, Web Push (Cloudflare Workers) | à faire |
+| D48 | **Glissement entre onglets v2** : la page suit le doigt 1:1 (rAF), résistance aux bords, validation à 22 % de la largeur ou par vitesse (> 0,45 px/ms), sortie et entrée animées (Web Animations) avec rendu de la page suivante en parallèle ; flou du verre coupé pendant le geste (coût GPU). | « Les glissements ne sont pas très fluides. » |
+| D49 | **Dépense détaillée** quand l'énergie active de l'app Santé est connue : métabolisme de base × 1,2 + énergie active (pas) + 250 kcal × jours de travail manuel / 7 + 250 kcal × séances / 7. Pour lui (58 kg, 184 cm, 23 ans, 260 kcal actives, 5 j) : 1944 + 260 + 179 + 71 ≈ 2450 kcal → objectif ≈ 2820 kcal (avant : facteur 1,55 → 2890). Carte unique sur Aujourd'hui pour choisir « passer » ou « garder » ; la dépense adaptative corrige ensuite. Niveau de preuve faible (estimation de départ). | Monteur chaussure 5 j/7 ; app Santé 289 kcal (oct.) et 232 kcal (nov.). |
+| D50 | **Programme adapté au métier qui sollicite le haut du corps** : mini-séance de semaine (jour travaillé) limitée aux jambes et au tronc ; séance B du dimanche (veille de travail) : −1 série par exercice du haut (min. 2), +1 série squat et pont ; étirements des avant-bras dans la mobilité, cercles des poignets à l'échauffement ; retour « avant-bras et poignets » en fin de séance : en cas de douleur, haut du corps allégé à la séance suivante (−1 série, 3 répétitions en réserve) et conseil de consulter si ça dure. Conseils de jour de travail (collations 10h/16h, hydratation). | Bras et haut du corps déjà très utilisés au travail. |

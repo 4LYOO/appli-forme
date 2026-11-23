@@ -2,12 +2,12 @@
 import * as db from '../db.js';
 import { h, mount, why, fmt, toast, sheet, chips, stepper, clear, confirmSheet } from '../ui.js';
 import { todayISO, mondayOf, addDays, weekday, shortDate } from '../lib/dates.js';
-import { EXERCISES, SESSIONS, MUSCLES, TRACKED, MOBILITY, WARMUP, exerciseById, sessionBlocks } from '../data/exercises.js';
+import { EXERCISES, SESSIONS, MUSCLES, TRACKED, MOBILITY, WARMUP, exerciseById, sessionBlocks, UPPER } from '../data/exercises.js';
 import { nextTarget, adjustForReadiness, volumeByMuscle, volumeDelta, perfTrend, deloadAdvice } from '../lib/training.js';
 import { diffDays } from '../lib/dates.js';
 import { catchUpBlocks } from '../lib/daily.js';
 import { LEVELS } from '../lib/score.js';
-import { logAdjustment } from '../state.js';
+import { logAdjustment, getProfile } from '../state.js';
 import { go, refresh } from '../main.js';
 
 const START_LEVEL = { tractions: 0, curl_elastique: 0, facepull: 0, pompes: 3, pompes_serrees: 1, pike: 1, rowing: 1, superman: 0, squat: 1, bulgare: 1, pont: 1, mollets: 0, gainage: 1, releves: 0 };
@@ -132,17 +132,21 @@ async function deloadState(today) {
 }
 
 /** Mini-séance : les 3 muscles les plus en retard sur leur volume de la semaine (3 séries si le week-end a sauté). */
-async function catchUpSession(equipment) {
+async function catchUpSession(equipment, prof = {}) {
   const today = todayISO(), mon = mondayOf(today);
   const week = (await db.byDateRange('workouts', mon, addDays(mon, 6))).filter((w) => w.status === 'terminee');
   const lastSat = addDays(mon, -2), lastSun = addDays(mon, -1);
   const wd = weekday(today);
   const lastWeekend = (await db.byDateRange('workouts', lastSat, lastSun)).filter((w) => w.status === 'terminee' && (w.session === 'A' || w.session === 'B'));
-  const pool = [
-    { ex: 'pompes', muscle: 'pecs' }, { ex: equipment.includes('barre') ? 'tractions' : 'rowing', muscle: 'dos' },
-    { ex: 'squat', muscle: 'quadriceps' }, { ex: 'pont', muscle: 'ischios' }, { ex: 'pike', muscle: 'epaules' },
-    ...(equipment.includes('elastique') ? [{ ex: 'curl_elastique', muscle: 'biceps' }] : []),
-  ];
+  // Jour de travail avec un métier qui sollicite les bras : mini-séance jambes et tronc uniquement
+  const workday = prof.upperBodyJob && wd >= 1 && wd <= Math.min(5, prof.jobDays ?? 5);
+  const pool = workday
+    ? [{ ex: 'squat', muscle: 'quadriceps' }, { ex: 'pont', muscle: 'ischios' }, { ex: 'mollets', muscle: 'mollets' }, { ex: 'gainage', muscle: 'abdos' }]
+    : [
+      { ex: 'pompes', muscle: 'pecs' }, { ex: equipment.includes('barre') ? 'tractions' : 'rowing', muscle: 'dos' },
+      { ex: 'squat', muscle: 'quadriceps' }, { ex: 'pont', muscle: 'ischios' }, { ex: 'pike', muscle: 'epaules' },
+      ...(equipment.includes('elastique') ? [{ ex: 'curl_elastique', muscle: 'biceps' }] : []),
+    ];
   return catchUpBlocks({ volume: volumeByMuscle(week, exerciseById), targets: VOLUME_TARGET, pool, weekendMissed: wd >= 1 && wd <= 5 && lastWeekend.length === 0 })
     .map((b) => ({ ...b, why: b.why.replace(/^(\w+)/, (m) => MUSCLES[m] || m) }));
 }
@@ -153,9 +157,13 @@ async function createWorkout(sessionId, mode) {
   const deloadUntil = await db.kvGet('deloadUntil');
   if (deloadUntil && todayISO() <= deloadUntil) mode = 'allegee';
   const adj = (await db.kvGet('setsAdj', {}))[sessionId] || {};
-  let blocks = sessionId === 'M' ? await catchUpSession(equipment)
-    : sessionBlocks(sessionId, equipment).map((b) => ({ ...b, sets: Math.min(6, Math.max(1, b.sets + (adj[b.ex] || 0))) }));
+  const prof = (await getProfile()) || {};
+  let blocks = sessionId === 'M' ? await catchUpSession(equipment, prof)
+    : sessionBlocks(sessionId, equipment, { upperBodyJob: !!prof.upperBodyJob }).map((b) => ({ ...b, sets: Math.min(6, Math.max(1, b.sets + (adj[b.ex] || 0))) }));
   blocks = adjustForReadiness(blocks, mode);
+  // Douleur d'avant-bras signalée à la dernière séance : haut du corps allégé (−1 série, 3 répétitions en réserve)
+  const lastW = (await db.getAll('workouts')).filter((x) => x.status === 'terminee').sort((a, b) => b.startedAt - a.startedAt)[0];
+  if (lastW?.forearms?.pain) blocks = blocks.map((b) => (UPPER.has(b.ex) ? { ...b, sets: Math.max(1, b.sets - 1), rirTarget: 3 } : b));
   const exercises = [];
   for (const b of blocks) {
     const ex = exerciseById(b.ex);
@@ -185,7 +193,7 @@ async function workoutView(root, id) {
   mount(root, 
     h('div.page-head', h('div', h('h1', se.name), h('div.sub', `${w.mode === 'allegee' ? 'Allégée · ' : ''}${se.duration} · ${done ? 'terminée' : 'en cours'}`)),
       !done && h('button.btn.btn-sm', { onclick: async () => { if (await confirmSheet('Abandonner la séance ?', 'Les séries déjà notées seront supprimées.', 'Abandonner', true)) { try { await db.del('workouts', w.id); stopTimer(); go('seance', {}, { replace: true }); } catch {} } } }, 'Abandonner')),
-    w.session === 'M' ? h('div.coach', 'Mini-séance ciblée : les 3 muscles les plus en retard sur leur volume de la semaine. ', why('mini_rattrapage')) : null,
+    w.session === 'M' ? h('div.coach', w.exercises.some((e) => UPPER.has(e.ex)) ? 'Mini-séance ciblée : les 3 muscles les plus en retard sur leur volume de la semaine. ' : 'Mini-séance jambes et tronc : tes bras ont déjà travaillé toute la journée. ', why(['mini_rattrapage', 'travail_physique'])) : null,
     h('div.coach', w.mode === 'allegee' ? 'Séance allégée : moins de séries, garde 3 répétitions en réserve. L\'important est de garder l\'habitude.' : 'Séries de travail à 1-2 répétitions en réserve. Enchaîne les exercices d\'une même lettre (A1 puis A2), repos 60-90 s.',
       ' ', why(w.mode === 'allegee' ? ['autoregulation', 'sommeil_muscle'] : ['rir', 'volume'])),
     !done && !w.exercises.some((e) => e.sets.length) ? h('details.card', { style: { marginTop: '12px' } }, h('summary', { style: { fontWeight: 650 } }, 'Échauffement (3 min)'),
@@ -241,6 +249,8 @@ function setSheet(e, ex, i, onSaved) {
 async function finishSheet(w) {
   const muscles = [...new Set(w.exercises.filter((e) => e.sets.length).flatMap((e) => Object.entries(exerciseById(e.ex).muscles).filter(([, f]) => f === 1).map(([m]) => m)))];
   const fb = Object.fromEntries(muscles.map((m) => [m, { pump: 2, soreness: 1, pain: false }]));
+  const prof = (await getProfile()) || {};
+  const fore = { tired: 1, pain: false };
   sheet('Comment ça s\'est passé ?', (close) => h('div.stack',
     h('p.small.muted', 'Un tap par ligne (valeurs par défaut déjà cochées). Ça ajuste tes séries de la prochaine fois.'),
     h('div', muscles.map((m) => h('div.fb-row',
@@ -251,10 +261,17 @@ async function finishSheet(w) {
       chips([{ value: 1, label: 'Aucune' }, { value: 2, label: 'Légères' }, { value: 3, label: 'Encore là' }], fb[m].soreness, (v) => (fb[m].soreness = v ?? 1), { cls: 'fill' }),
       h('div.fb-q', 'Douleur articulaire'),
       chips([{ value: false, label: 'Non' }, { value: true, label: 'Oui' }], fb[m].pain, (v) => (fb[m].pain = !!v), { cls: 'fill' })))),
+    prof.upperBodyJob ? h('div.fb-row',
+      h('div', { style: { fontWeight: 600 } }, 'Avant-bras et poignets'),
+      h('div.fb-q', 'Fatigue'),
+      chips([{ value: 1, label: 'Aucune' }, { value: 2, label: 'Un peu' }, { value: 3, label: 'Beaucoup' }], fore.tired, (v) => (fore.tired = v ?? 1), { cls: 'fill' }),
+      h('div.fb-q', 'Douleur (tendon, coude, poignet)'),
+      chips([{ value: false, label: 'Non' }, { value: true, label: 'Oui' }], fore.pain, (v) => (fore.pain = !!v), { cls: 'fill' })) : null,
     why('retour_muscle'),
     h('button.btn.btn-primary', { onclick: async () => {
       try {
-        w.status = 'terminee'; w.endedAt = Date.now(); w.feedback = fb;
+        w.status = 'terminee'; w.endedAt = Date.now(); w.feedback = fb; w.forearms = prof.upperBodyJob ? fore : null;
+        if (fore.pain) await logAdjustment('Douleur avant-bras/poignet signalée', 'Exercices du haut à faire sans aller à l\'échec (3 répétitions en réserve) et étirements des avant-bras chaque soir. Si la douleur dure plus d\'une semaine ou gêne au travail : en parler à un médecin ou un kiné.', 'programme');
         w.exercises = w.exercises.filter((e) => e.sets.length);
         let down = 0;
         for (const e of w.exercises) {

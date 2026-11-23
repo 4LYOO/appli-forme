@@ -7,6 +7,7 @@ import { trendSeries } from './lib/weight.js';
 export const DEFAULT_PROFILE = {
   sex: 'H', birthdate: '2002-12-09', heightCm: 184, weightKg: 58, activity: 'modere',
   eggs: true, dairy: true, bedtime: '22:30', wake: '06:00', sessionTime: '10:00',
+  job: 'Monteur chaussure', physicalJob: true, jobDays: 5, upperBodyJob: true, healthActive: 260,
 };
 
 export const DEFAULT_INTENTIONS = [
@@ -39,7 +40,8 @@ export async function saveProfileAndTargets(profile, targets, reason) {
 export const ageNow = (p) => ageOn(p.birthdate, todayISO());
 
 export function computeInitial(p, weightKg = p.weightKg) {
-  return initialTargets({ sex: p.sex, weightKg, heightCm: p.heightCm, age: ageNow(p), activity: p.activity, surplusPct: p.surplusPct ?? 0.15, proteinPerKg: p.proteinPerKg ?? 2.0 });
+  return initialTargets({ sex: p.sex, weightKg, heightCm: p.heightCm, age: ageNow(p), activity: p.activity, surplusPct: p.surplusPct ?? 0.15, proteinPerKg: p.proteinPerKg ?? 2.0,
+    healthActive: p.healthActive ?? null, physicalJobDays: p.physicalJob ? (p.jobDays ?? 5) : 0, sessionsPerWeek: 2 });
 }
 
 /** Objectifs effectifs du jour : protéines recalculées sur la tendance de poids actuelle. */

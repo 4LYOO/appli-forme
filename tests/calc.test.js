@@ -27,6 +27,11 @@ test('Mifflin-St Jeor et objectifs de départ', () => {
   assert.equal(t.surplus, 380); // 15 % de 2511
   assert.equal(t.kcal, 2890);
   assert.equal(t.protein, 116);
+  // Modèle détaillé : métier physique 5 j/7, 232 kcal actives/j (app Santé), 2 séances
+  const d = initialTargets({ sex: 'H', weightKg: 58, heightCm: 184, age: 23, healthActive: 232, physicalJobDays: 5, sessionsPerWeek: 2 });
+  assert.equal(d.detail.total, 1944 + 232 + 179 + 71);
+  assert.equal(d.maintenance, 2430);
+  assert.equal(d.kcal, 2430 + 360);
   const s = initialTargets({ sex: 'H', weightKg: 50, heightCm: 160, age: 60, activity: 'sedentaire' });
   assert.equal(s.surplus, 300); // borne basse
 });

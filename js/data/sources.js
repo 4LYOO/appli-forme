@@ -167,6 +167,11 @@ export const SOURCES = {
     text: 'C\'est le volume total de la semaine par muscle qui compte, pas le jour où il est fait. La mini-séance de semaine cible donc les muscles qui ont le plus de retard sur leurs ≈ 10 séries.',
     refs: ['Pelland et al., 2024', 'Schoenfeld, Grgic & Krieger, 2019'],
   },
+  travail_physique: {
+    title: 'Métier manuel et dépense réelle', niveau: 'faible',
+    text: 'Ta dépense est estimée par morceaux : métabolisme de base × 1,2 (vie courante), + l\'énergie active mesurée par l\'app Santé (pas), + environ 250 kcal par jour de travail manuel (gestes répétés des bras, debout), + environ 250 kcal par séance, le tout ramené à la journée. Ce n\'est qu\'un point de départ : ta courbe de poids corrige ensuite le chiffre chaque semaine. Côté entraînement, tes bras et ton dos travaillent déjà 5 jours sur 7 : la mini-séance de semaine passe aux jambes et au tronc, la séance du dimanche (veille de travail) allège un peu le haut et renforce les jambes, et un étirement des avant-bras est ajouté pour protéger tendons et poignets.',
+    refs: ['FAO/WHO/UNU 2004 : niveaux d\'activité physique (PAL)', 'Ainsworth et al., 2011 : Compendium des activités physiques', 'Pelland et al., 2024 (volume hebdomadaire par muscle)', 'Prévention des TMS : INRS, gestes répétitifs du membre supérieur'],
+  },
   off: {
     title: 'Code-barres et Open Food Facts', niveau: 'modere',
     text: 'Le code-barres donne le produit exact (marque, recette) et les valeurs de son étiquette, saisies par les contributeurs d\'Open Food Facts. C\'est la saisie la plus précise pour un produit emballé. Le produit est ensuite gardé sur ton iPhone et reste disponible hors ligne.',
