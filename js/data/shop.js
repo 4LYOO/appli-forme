@@ -122,7 +122,103 @@ export const SHOP = {
   fruits_rouges: P('Fruits rouges', 'Surgelés', 'sachet 750 g', 750, 3.0, 39, 1),
   frites: P('Frites au four', 'Surgelés', 'sachet 1 kg', 1000, 1.8, 150, 2.5),
   pizza: P('Pizza margherita', 'Surgelés', '1 pizza (400 g)', 400, 2.2, 227, 10),
+
+  // ----- Catalogue complémentaire (à cocher dans « Ajouter des produits ») -----
+  sel: P('Sel', 'Épicerie', '1 kg', 1000, 0.4, 0, 0),
+  poivre: P('Poivre moulu', 'Épicerie', '50 g', 50, 1.5, 0, 0),
+  cumin: P('Cumin', 'Épicerie', '40 g', 40, 1.2, 0, 0),
+  curry_poudre: P('Curry en poudre', 'Épicerie', '40 g', 40, 1.2, 0, 0),
+  paprika: P('Paprika', 'Épicerie', '40 g', 40, 1.2, 0, 0),
+  herbes: P('Herbes de Provence', 'Épicerie', '30 g', 30, 1.1, 0, 0),
+  bouillon: P('Bouillon de légumes (cubes)', 'Épicerie', 'x12', 120, 1.2, 0, 0),
+  moutarde: P('Moutarde', 'Épicerie', 'pot 370 g', 370, 1.0, 150, 7),
+  vinaigre: P('Vinaigre', 'Épicerie', 'bouteille 1 L', 1000, 0.8, 0, 0),
+  sauce_soja: P('Sauce soja', 'Épicerie', 'bouteille 250 ml', 250, 1.4, 60, 8),
+  ketchup: P('Ketchup', 'Épicerie', 'flacon 560 g', 560, 1.6, 110, 1),
+  levure: P('Levure chimique', 'Épicerie', 'x6 sachets', 66, 0.8, 0, 0),
+  vermicelles: P('Vermicelles', 'Épicerie', '500 g', 500, 0.9, 350, 12),
+  puree_flocons: P('Purée en flocons', 'Épicerie', '500 g', 500, 1.6, 345, 8),
+  polenta: P('Polenta', 'Épicerie', '500 g', 500, 1.3, 360, 8),
+  nouilles: P('Nouilles instantanées', 'Épicerie', 'x5 (350 g)', 350, 1.2, 450, 9),
+  galettes_riz: P('Galettes de riz', 'Épicerie', 'paquet 130 g', 130, 1.0, 390, 8),
+  chips: P('Chips', 'Épicerie', 'sachet 150 g', 150, 1.0, 530, 6),
+  olives: P('Olives', 'Épicerie', 'bocal 150 g égouttés', 150, 1.3, 150, 1),
+  flageolets: P('Flageolets (boîte)', 'Épicerie', 'boîte (265 g égouttés)', 265, 0.9, 100, 7),
+  lentilles_bt: P('Lentilles cuisinées (boîte)', 'Épicerie', 'boîte (265 g)', 265, 0.85, 100, 7),
+  pois_carottes: P('Petits pois-carottes (boîte)', 'Épicerie', 'boîte (265 g)', 265, 0.85, 60, 3),
+  champignons_bt: P('Champignons (boîte)', 'Épicerie', 'boîte (230 g)', 230, 0.9, 25, 2),
+  haricots_verts_bt: P('Haricots verts (boîte)', 'Épicerie', 'boîte (440 g)', 440, 0.85, 25, 1.5),
+  pain_pita: P('Pains pita', 'Épicerie', 'x6 (330 g)', 330, 1.5, 275, 9),
+  pain_burger: P('Pains à burger', 'Épicerie', 'x6 (300 g)', 300, 1.3, 270, 9),
+  brioche: P('Brioche tranchée', 'Épicerie', '500 g', 500, 1.8, 360, 8),
+  madeleines: P('Madeleines', 'Épicerie', '250 g', 250, 1.4, 450, 6),
+  pain_epices: P('Pain d\'épices', 'Épicerie', '300 g', 300, 1.3, 330, 4),
+  cereales_choco: P('Céréales au chocolat', 'Épicerie', '375 g', 375, 1.6, 400, 8),
+  gaufres: P('Gaufres', 'Épicerie', 'x10 (250 g)', 250, 1.6, 450, 6),
+  cookies: P('Cookies', 'Épicerie', '200 g', 200, 1.1, 490, 6),
+  biscuits_fourres: P('Biscuits fourrés chocolat', 'Épicerie', '300 g', 300, 1.2, 470, 6),
+  crepes_ind: P('Crêpes (prêtes à manger)', 'Épicerie', 'x10 (300 g)', 300, 1.8, 280, 7),
+  cajou: P('Noix de cajou', 'Épicerie', '200 g', 200, 2.9, 618, 18),
+  chicoree: P('Chicorée soluble', 'Épicerie', '250 g', 250, 2.2, 0, 0),
+  jus_pomme: P('Jus de pomme', 'Boissons', 'brique 1 L', 1000, 1.2, 45, 0),
+  sirop: P('Sirop (grenadine, menthe…)', 'Boissons', 'bouteille 75 cl', 750, 1.3, 280, 0),
+  yaourt_fruits: P('Yaourts aux fruits', 'Frais', 'x8 (1 kg)', 1000, 1.6, 95, 3.5),
+  flans: P('Flans', 'Frais', 'x4 (400 g)', 400, 1.2, 120, 3),
+  riz_au_lait: P('Riz au lait', 'Frais', 'x4 (400 g)', 400, 1.6, 120, 3.5),
+  creme_liquide: P('Crème liquide', 'Frais', 'brique 20 cl', 200, 0.9, 300, 2),
+  fromage_frais: P('Fromage frais à tartiner', 'Frais', 'barquette 150 g', 150, 1.3, 250, 7),
+  mini_fromages: P('Mini fromages en portions', 'Frais', 'x12 (240 g)', 240, 2.2, 300, 22),
+  gouda: P('Gouda en tranches', 'Frais', '200 g', 200, 1.8, 360, 25),
+  raclette: P('Fromage à raclette', 'Frais', '400 g', 400, 3.5, 340, 22),
+  parmesan: P('Parmesan râpé', 'Frais', 'sachet 100 g', 100, 2.0, 400, 33),
+  margarine: P('Margarine', 'Frais', 'barquette 500 g', 500, 1.8, 540, 0),
+  oeufs6: P('Œufs', 'Frais', 'boîte de 6', 300, 1.75, 140, 12.5),
+  pate_feuilletee: P('Pâte feuilletée', 'Frais', 'rouleau 230 g', 230, 0.9, 400, 6),
+  pate_brisee: P('Pâte brisée', 'Frais', 'rouleau 230 g', 230, 0.9, 420, 6),
+  nuggets_vege: P('Nuggets végétaux', 'Frais', 'barquette 250 g', 250, 2.8, 220, 14),
+  galettes_vege: P('Galettes végétales (céréales, légumes)', 'Frais', 'x4 (360 g)', 360, 2.5, 220, 6),
+  poires: P('Poires', 'Fruits & légumes', '1 kg', 1000, 2.4, 50, 0.4),
+  raisin: P('Raisin', 'Fruits & légumes', 'barquette 500 g', 500, 2.0, 70, 0.7),
+  citrons: P('Citrons', 'Fruits & légumes', 'x3', 300, 1.2, 30, 0.7),
+  concombre: P('Concombre', 'Fruits & légumes', '1 pièce', 400, 0.8, 12, 0.6),
+  poireaux: P('Poireaux', 'Fruits & légumes', '1 kg', 1000, 2.0, 30, 1.5),
+  chou_fleur: P('Chou-fleur', 'Fruits & légumes', '1 pièce', 1000, 1.8, 25, 2),
+  aubergine: P('Aubergine', 'Fruits & légumes', '1 pièce', 300, 0.9, 20, 1),
+  butternut: P('Courge butternut', 'Fruits & légumes', '1 pièce (≈ 1 kg)', 1000, 1.8, 40, 1),
+  persil: P('Persil', 'Fruits & légumes', '1 bouquet', 50, 0.7, 0, 0),
+  betteraves: P('Betteraves cuites', 'Fruits & légumes', 'x4 (500 g)', 500, 1.2, 40, 1.5),
+  glace: P('Glace vanille', 'Surgelés', 'bac 1 L', 500, 2.2, 200, 3.5),
+  legumes_wok: P('Légumes pour wok', 'Surgelés', 'sachet 1 kg', 1000, 2.4, 40, 2),
+  rosti: P('Galettes de pommes de terre (röstis)', 'Surgelés', 'sachet 750 g', 750, 2.0, 190, 2.5),
 };
+
+// Magasins : niveau de prix relatif (indicatif, base = enseignes les moins chères) et gamme premier prix.
+// L'assortiment exact varie d'un magasin à l'autre : chez les « discounters » (Lidl, Aldi), la gamme est plus courte,
+// les produits marqués rares y sont masqués. Les prix restent des estimations : corrige-les avec ceux de ton magasin.
+export const STORES = [
+  { id: 'tous', name: 'Tous les magasins', mult: 1 },
+  { id: 'leclerc', name: 'E.Leclerc', mult: 1.0, brand: 'Eco+' },
+  { id: 'carrefour', name: 'Carrefour', mult: 1.08, brand: 'Simpl' },
+  { id: 'intermarche', name: 'Intermarché', mult: 1.05, brand: 'Top Budget' },
+  { id: 'superu', name: 'Super U', mult: 1.05, brand: 'Bien vu' },
+  { id: 'auchan', name: 'Auchan', mult: 1.04 },
+  { id: 'lidl', name: 'Lidl', mult: 0.97, discount: true },
+  { id: 'aldi', name: 'Aldi', mult: 0.96, discount: true },
+];
+// Produits souvent absents des petits formats « discount »
+export const RARE_IN_DISCOUNT = new Set(['tempeh', 'seitan', 'tofu_fume', 'pst', 'quinoa', 'chicoree', 'raclette', 'galettes_vege', 'butternut', 'granola', 'boisson_soja', 'yaourt_soja']);
+
+export function storePrice(id, store, overrides = {}) {
+  if (overrides[id] != null) return overrides[id];
+  const s = SHOP[id]; if (!s) return 0;
+  const m = (STORES.find((x) => x.id === store) || STORES[0]).mult;
+  return Math.round(s.price * m * 100) / 100;
+}
+
+export function availableIn(id, store) {
+  const st = STORES.find((x) => x.id === store);
+  return !(st?.discount && RARE_IN_DISCOUNT.has(id));
+}
 
 // Aliment de l'appli → produit(s) à acheter, en grammes de produit par gramme d'aliment
 // (ex. riz cuit → riz sec × 0,4 ; banane épluchée → bananes × 1,5 avec la peau).
