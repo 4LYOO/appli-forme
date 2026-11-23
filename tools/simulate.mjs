@@ -52,6 +52,7 @@ const scenarios = [
   runNutrition({ name: '3. Apports insuffisants (mange 85 % de l\'objectif)', adherence: () => 0.85, seed: 13 }),
   runNutrition({ name: '4. Jours non saisis (35 % de jours incomplets, 4 pesées/sem)', pComplete: 0.65, pWeigh: 0.57, seed: 14 }),
   runNutrition({ name: '5. Sous-déclaration constante (note 85 % de ce qu\'il mange)', logFactor: 0.85, seed: 15 }),
+  runNutrition({ name: '6 bis. Sans balance : une pesée par semaine (pharmacie)', pWeigh: 1 / 7, seed: 17 }),
   runNutrition({ name: '6. Mauvais sommeil semaines 4-5 (et mange 90 %)', trueTDEE: 3000, sleepBad: (i) => i >= 21 && i < 35, adherence: (i) => (i >= 21 && i < 35 ? 0.9 : 1), seed: 16 }),
 ];
 

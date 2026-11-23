@@ -64,3 +64,18 @@ test('composition à partir des mensurations', async () => {
   assert.equal(compositionSignal([{ date: '2026-11-01', arm: 27, chest: 85, thigh: 48, waist: 70 }, { date: '2027-01-01', arm: 27.2, chest: 85.5, thigh: 48.2, waist: 73 }]).status, 'gras');
   assert.equal(compositionSignal([{ date: '2026-11-01', arm: 27, chest: 85, thigh: 48, waist: 70 }, { date: '2027-01-01', arm: 28, chest: 87, thigh: 49.5, waist: 70.5 }]).status, 'muscle');
 });
+
+test('sans balance : une pesée par semaine suffit pour une estimation (confiance limitée)', async () => {
+  const { estimateTDEE } = await import('../js/lib/adaptive.js');
+  const days = [], weights = [];
+  for (let i = 0; i < 42; i++) {
+    const date = addDays(START, i);
+    days.push({ date, kcal: 3000, complete: true });
+    if (i % 7 === 6) weights.push({ date, kg: 58 + (0.25 / 7) * i + (i % 14 === 6 ? 0.3 : -0.3) }); // pesées bruitées ±0,3 kg
+  }
+  const e = estimateTDEE({ days, weights, prior: 2500, endDate: addDays(START, 41) });
+  assert.equal(e.sparse, true);
+  assert.equal(e.nWeigh, 6);
+  assert.ok(['faible', 'moyenne'].includes(e.confidence), e.confidence); // jamais « bonne » avec si peu de pesées
+  assert.ok(e.tdee > 2500 && e.tdee < 3000, `${e.tdee}`); // tire vers la vraie valeur (≈ 2 725) sans y aller d'un coup
+});

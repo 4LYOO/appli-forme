@@ -99,6 +99,23 @@ Action proposée (semaine 6) : « Tu manges ce qui est prévu mais le poids ne b
 
 Bilan : 1,8 kg en 8 semaines ; dépense estimée finale 2634 kcal pour 2550 réels (écart 3,3 %).
 
+## 6 bis. Sans balance : une pesée par semaine (pharmacie)
+
+Dépense réelle simulée : 3000 kcal.
+
+| Sem. | Poids réel | Tendance | Rythme 14 j | Dépense estimée | Objectif suivant | Diagnostic |
+|---|---|---|---|---|---|---|
+| 1 | 57,9 | – | – | 2510 (aucune, 7 j, 0 pesées) | 2890 | – |
+| 2 | 57,8 | 57,7 | – | 2510 (aucune, 14 j, 2 pesées) | 2890 | – |
+| 3 | 57,8 | 57,5 | – | 2510 (aucune, 21 j, 4 pesées) | 2890 | – |
+| 4 | 57,8 | 57,5 | – | 2510 (aucune, 28 j, 5 pesées) | 2890 | – |
+| 5 | 57,7 | 58,0 | – | 2652 (moyenne, 35 j, 7 pesées) | 2980 (+90) | – |
+| 6 | 57,7 | 58,2 | – | 2666 (moyenne, 42 j, 9 pesées) | 2980 | – |
+| 7 | 57,9 | 58,2 | – | 2692 (moyenne, 42 j, 9 pesées) | 2980 | – |
+| 8 | 57,8 | 58,2 | – | 2685 (moyenne, 42 j, 7 pesées) | 2980 | – |
+
+Bilan : -0,2 kg en 8 semaines ; dépense estimée finale 2685 kcal pour 3000 réels (écart -10,5 %).
+
 ## 6. Mauvais sommeil semaines 4-5 (et mange 90 %)
 
 Dépense réelle simulée : 3000 kcal.

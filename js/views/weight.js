@@ -34,6 +34,15 @@ export async function render(root, params) {
       h('div', { style: { marginTop: '10px' } }, h('button.btn.btn-primary', { onclick: save }, todayEntry ? 'Corriger' : 'Enregistrer'))),
   );
 
+  const lastW = entries.at(-1);
+  if (!lastW || diffDays(lastW.date, today) >= 7) {
+    root.append(h('div.card', { style: { marginTop: '12px' } },
+      h('h2', 'Pas de balance ?'),
+      h('p.small', { style: { marginTop: '6px' } }, 'Pas grave : une pesée par semaine suffit à l\'appli pour estimer ta dépense (avec une confiance plus faible). Les pharmacies ont souvent une balance gratuite ; une salle de sport ou un proche aussi.'),
+      h('p.small.muted', { style: { marginTop: '6px' } }, 'Pour comparer : même jour de la semaine, le matin si possible, à jeun, mêmes vêtements légers. Note le poids ici le jour même.'),
+      h('p.small.muted', { style: { marginTop: '6px' } }, 'En attendant, les mensurations (mètre ruban, ≈ 2 €) montrent si tu prends du muscle.')));
+  }
+
   if (!entries.length) {
     mount(root, h('div.card', h('p.muted', 'Ta courbe apparaîtra après quelques pesées. Une pesée par jour est idéale, mais 4-5 par semaine suffisent.')));
     return;

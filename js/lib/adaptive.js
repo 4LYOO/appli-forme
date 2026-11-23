@@ -13,7 +13,18 @@ const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
  * Fenêtre glissante de 28 jours se terminant à endDate (moins de bruit que 21 j : ±60 kcal au lieu de ±100).
  * Retourne { tdee, observed, weight (0-1), confidence, nComplete, nWeigh, slopeKgWeek, meanIntake }.
  */
-export function estimateTDEE({ days, weights, prior, endDate, window = 28, chained = false, kcalPerKg = KCAL_PER_KG }) {
+export function estimateTDEE(args) {
+  const r = estimateWindow(args);
+  // Pesées rares (pas de balance à la maison : pharmacie, salle, chez un proche) : fenêtre élargie à 6 semaines
+  // et confiance plafonnée, car chaque pesée isolée est bruitée (± 0,5-1 kg d'eau).
+  if (r.nWeigh < 8 && (args.window ?? 28) === 28) {
+    const s = estimateWindow({ ...args, window: 42, sparse: true });
+    if (s.weight > r.weight) return s;
+  }
+  return r;
+}
+
+function estimateWindow({ days, weights, prior, endDate, window = 28, chained = false, sparse = false, kcalPerKg = KCAL_PER_KG }) {
   const from = addDays(endDate, -(window - 1));
   const d = days.filter((x) => x.date >= from && x.date <= endDate && x.complete && x.kcal > 0);
   const w = weights.filter((x) => x.date >= from && x.date <= endDate);
@@ -23,18 +34,18 @@ export function estimateTDEE({ days, weights, prior, endDate, window = 28, chain
   const span = w.length ? diffDays(w[0].date < w[w.length - 1].date ? w[0].date : w[w.length - 1].date, endDate) : 0;
 
   let observed = null;
-  if (meanIntake != null && reg && nWeigh >= 4 && span >= 10) observed = meanIntake - reg.slope * kcalPerKg;
+  if (meanIntake != null && reg && nWeigh >= (sparse ? 3 : 4) && span >= (sparse ? 21 : 10)) observed = meanIntake - reg.slope * kcalPerKg;
 
   // Confiance : quantité de jours complets ET de pesées, plus régularité des pesées.
-  const fIntake = clamp((nComplete - 8) / (18 - 8), 0, 1);
-  const fWeigh = clamp((nWeigh - 5) / (14 - 5), 0, 1);
+  const fIntake = clamp((nComplete - (sparse ? 12 : 8)) / (sparse ? 16 : 10), 0, 1);
+  const fWeigh = sparse ? clamp((nWeigh - 2) / 4, 0, 1) * 0.6 : clamp((nWeigh - 5) / (14 - 5), 0, 1);
   const weight = observed == null ? 0 : fIntake * fWeigh;
   const k = chained ? 0.6 : 1;
   const tdee = observed == null ? prior : prior + k * weight * (observed - prior);
   const confidence = weight >= 0.75 ? 'bonne' : weight >= 0.4 ? 'moyenne' : weight > 0 ? 'faible' : 'aucune';
   return {
     tdee: Math.round(tdee), observed: observed == null ? null : Math.round(observed), weight: +weight.toFixed(2), confidence,
-    nComplete, nWeigh, window, meanIntake: meanIntake == null ? null : Math.round(meanIntake),
+    nComplete, nWeigh, window, sparse, meanIntake: meanIntake == null ? null : Math.round(meanIntake),
     slopeKgWeek: reg ? +(reg.slope * 7).toFixed(3) : null,
   };
 }
