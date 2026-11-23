@@ -54,7 +54,7 @@ export function banner(id, { kind = 'info', text, action, onAction, dismiss = tr
   const host = document.getElementById('banners');
   host.querySelector(`[data-id="${id}"]`)?.remove();
   const b = h(`div.banner.banner-${kind}`, { 'data-id': id, role: kind === 'error' ? 'alert' : 'status' },
-    h('span.banner-icon', { 'aria-hidden': 'true' }, kind === 'error' ? '⚠' : 'ℹ'),
+    h('span.banner-icon', { 'aria-hidden': 'true' }, icon(kind === 'error' ? 'alert' : 'info')),
     h('span.banner-text', text),
     action && h('button.banner-action', { onclick: () => onAction?.(b) }, action),
     dismiss && h('button.banner-close', { 'aria-label': 'Fermer', onclick: () => b.remove() }, '×'));
