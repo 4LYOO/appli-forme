@@ -5,7 +5,7 @@ import { h, mount, why, fmt, toast, sheet, clear, stepper } from '../ui.js';
 import { icon } from '../icons.js';
 import { todayISO, nowMinutes } from '../lib/dates.js';
 import { RECIPES, CATEGORIES } from '../data/recipes.js';
-import { SHOP, FOOD_TO_SHOP } from '../data/shop.js';
+import { SHOP, FOOD_TO_SHOP, storePrice } from '../data/shop.js';
 import { recipeTotals, recipeCost } from '../lib/shopping.js';
 import { loadFoods } from './meals.js';
 import { refresh } from '../main.js';
@@ -15,12 +15,12 @@ let filters = new Set();
 let sort = 'toi';
 
 const FILTERS = [
-  { id: 'rapide', label: '⚡ ≤ 10 min', test: (r) => r.time <= 10 },
-  { id: 'prix', label: '€ Petit prix', test: (r) => r.cost <= (r.cat === 'collation' ? 0.5 : 0.9) },
-  { id: 'emporter', label: '🎒 À emporter', test: (r) => r.tags.includes('emporter') },
-  { id: 'froid', label: '❄ Sans cuisson', test: (r) => r.tags.includes('froid') },
-  { id: 'proteine', label: '💪 Protéiné', test: (r) => r.p >= (r.cat === 'collation' ? 15 : 25) },
-  { id: 'avance', label: '📦 Pour plusieurs jours', test: (r) => r.tags.includes('avance') },
+  { id: 'rapide', icon: 'bolt', label: '10 min max', test: (r) => r.time <= 10 },
+  { id: 'prix', icon: 'euro', label: 'Petit prix', test: (r) => r.cost <= (r.cat === 'collation' ? 0.5 : 0.9) },
+  { id: 'emporter', icon: 'bag', label: 'À emporter', test: (r) => r.tags.includes('emporter') },
+  { id: 'froid', icon: 'snow', label: 'Sans cuisson', test: (r) => r.tags.includes('froid') },
+  { id: 'proteine', icon: 'muscle', label: 'Protéiné', test: (r) => r.p >= (r.cat === 'collation' ? 15 : 25) },
+  { id: 'avance', icon: 'box', label: 'Pour plusieurs jours', test: (r) => r.tags.includes('avance') },
 ];
 
 function defaultCat() {
@@ -36,8 +36,10 @@ function defaultCat() {
 export async function enrich() {
   const foods = await loadFoods();
   const byId = new Map(foods.map((f) => [f.id, f]));
-  const prices = await db.kvGet('prices', {});
-  return { byId, prices, list: RECIPES.map((r) => { const t = recipeTotals(r, byId); return { ...r, kcal: t.kcal, p: t.p, cost: recipeCost(r, SHOP, FOOD_TO_SHOP, prices) }; }) };
+  const overrides = await db.kvGet('prices', {});
+  const store = await db.kvGet('store', 'tous');
+  const prices = Object.fromEntries(Object.keys(SHOP).map((id) => [id, storePrice(id, store, overrides)]));
+  return { byId, prices, store, list: RECIPES.map((r) => { const t = recipeTotals(r, byId); return { ...r, kcal: t.kcal, p: t.p, cost: recipeCost(r, SHOP, FOOD_TO_SHOP, prices) }; }) };
 }
 
 export async function render(root) {
@@ -64,7 +66,7 @@ export async function render(root) {
   };
 
   const segCat = h('div.seg', CATEGORIES.map((c) => h(`button${c.id === cat ? '.on' : ''}`, { onclick: (e) => { cat = c.id; segCat.querySelectorAll('button').forEach((b) => b.classList.remove('on')); e.target.classList.add('on'); draw(); } }, c.label)));
-  const chipsEl = h('div.tabs', FILTERS.map((f) => h(`button${filters.has(f.id) ? '.on' : ''}`, { onclick: (e) => { filters.has(f.id) ? filters.delete(f.id) : filters.add(f.id); e.target.classList.toggle('on'); draw(); } }, f.label)));
+  const chipsEl = h('div.tabs', FILTERS.map((f) => h(`button${filters.has(f.id) ? '.on' : ''}`, { onclick: (e) => { filters.has(f.id) ? filters.delete(f.id) : filters.add(f.id); e.currentTarget.classList.toggle('on'); draw(); } }, icon(f.icon), f.label)));
   const segSort = h('div.seg', [['toi', 'Pour toi'], ['prix', 'Moins cher'], ['temps', 'Rapide'], ['kcal', '+ kcal']].map(([id, l]) =>
     h(`button${id === sort ? '.on' : ''}`, { onclick: (e) => { sort = id; segSort.querySelectorAll('button').forEach((b) => b.classList.remove('on')); e.target.classList.add('on'); draw(); } }, l)));
 
@@ -74,7 +76,7 @@ export async function render(root) {
     h('div', { style: { marginTop: '10px' } }, h('button.btn.btn-primary', { onclick: () => {
       const pool = list.filter((r) => r.cat === cat && [...filters].every((f) => FILTERS.find((x) => x.id === f).test(r)));
       if (pool.length) recipeSheet(pool[Math.floor(Math.random() * pool.length)], byId, true);
-    } }, '🎲 Choisis pour moi')),
+    } }, icon('dice'), 'Choisis pour moi')),
     h('div', { style: { margin: '12px 0 8px' } }, chipsEl),
     segSort,
     h('div', { style: { marginTop: '8px' } }, listEl),
@@ -108,7 +110,7 @@ function recipeSheet(r, byId, random = false) {
       h('ol.small', { style: { paddingLeft: '20px', margin: 0, lineHeight: 1.5 } }, r.steps.map((s) => h('li', { style: { marginBottom: '6px' } }, s))));
   };
   sheet(r.name, (close) => h('div.stack',
-    random ? h('div.coach', '🎲 Proposé au hasard parmi tes filtres. Pas envie ? Relance depuis l\'écran Idées.') : null,
+    random ? h('div.coach.row', icon('dice'), h('span', 'Proposé au hasard parmi tes filtres. Pas envie ? Relance depuis l\'écran Idées.')) : null,
     h('div.row.between', h('span.small.muted', 'Portions'), stepper(1, { min: 1, max: 8, onChange: (v) => { n = v; draw(); } })),
     body,
     h('div.btn-row',

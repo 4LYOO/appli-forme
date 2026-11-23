@@ -181,7 +181,7 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
     if (!photoUrl) {
       mount(photoEl, h('button.photo-cta', { onclick: () => pickImage().then(setPhoto) }, icon('camera'),
         h('div', h('div', { style: { fontWeight: 650 } }, 'Prendre le repas en photo'), h('div.small.muted', 'Puis dis ce que c\'est : il sera mémorisé pour la prochaine fois'))),
-        h('button.why', { onclick: () => pickImage().then(scanBarcode) }, '▦ Scanner un code-barres (produit emballé)'));
+        h('button.why.row', { onclick: () => pickImage().then(scanBarcode) }, icon('barcode'), 'Scanner un code-barres (produit emballé)'));
       return;
     }
     mount(photoEl, h('div.photo-box',
@@ -190,13 +190,13 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
         h('input.input', { placeholder: 'C\'est quoi ? (ex. Pâtes au pesto)', value: dishName, oninput: (e) => { dishName = e.target.value; renderCart(); } }),
         h('div.row.wrap',
           h('div.tiny.muted.grow', 'Puis choisis la quantité ci-dessous.'),
-          h('button.btn.btn-sm', { onclick: () => photoBlob && scanBarcode(photoBlob) }, '▦ Code-barres')))));
+          h('button.btn.btn-sm', { onclick: () => photoBlob && scanBarcode(photoBlob) }, icon('barcode'), 'Code-barres')))));
   }
 
   // ----- code-barres → Open Food Facts -----
   async function scanBarcode(file) {
     if (!file) return;
-    clear(scanEl); mount(scanEl, h('div.coach', '▦ Lecture du code-barres…'));
+    clear(scanEl); mount(scanEl, h('div.coach', 'Lecture du code-barres…'));
     let code = null;
     try { const { readBarcode } = await import('../barcode.js'); code = await readBarcode(file); } catch (e) { console.error(e); }
     if (!code) {
@@ -208,10 +208,10 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
     await showProduct(code);
   }
   async function showProduct(code) {
-    clear(scanEl); mount(scanEl, h('div.coach', `▦ ${code} : recherche du produit…`));
+    clear(scanEl); mount(scanEl, h('div.coach', `Code ${code} : recherche du produit…`));
     let prod = await db.get('products', code).catch(() => null);
     if (!prod) {
-      try { prod = await fetchProduct(code); } catch (e) { clear(scanEl); mount(scanEl, h('div.coach', `⚠ ${e.message} (il faut internet la première fois ; ensuite le produit est gardé sur ton iPhone)`)); return; }
+      try { prod = await fetchProduct(code); } catch (e) { clear(scanEl); mount(scanEl, h('div.coach', `${e.message} (il faut internet la première fois ; ensuite le produit est gardé sur ton iPhone)`)); return; }
       if (!prod) { clear(scanEl); mount(scanEl, h('div.coach', `Produit ${code} inconnu d'Open Food Facts. Utilise la recherche ou une estimation.`)); return; }
     }
     await db.put('products', { ...prod, lastUsed: Date.now() }).catch(() => {});
@@ -228,7 +228,7 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
       if (!list.length) { mount(box, h('p.small.muted', 'Aucun produit trouvé. Le code-barres reste le plus sûr.')); return; }
       for (const p of list) await db.put('products', { ...p, lastUsed: 0 }).catch(() => {});
       mount(box, h('div.section-title', 'Open Food Facts'), list.map(foodRow));
-    } catch (e) { clear(box); mount(box, h('p.small.muted', `⚠ ${e.message} (il faut internet)`)); }
+    } catch (e) { clear(box); mount(box, h('p.small.muted', `${e.message} (il faut internet)`)); }
   }
 
   // ----- enregistrer -----
@@ -327,7 +327,7 @@ async function buildAdd({ date, slot, recipe, photoPromise }) {
     if (!ds.length && !ps.length && !fs.length) mount(content, h('p.muted.small', { style: { marginTop: '12px' } }, 'Rien trouvé dans l\'appli.'));
     if (query.trim().length >= 3) {
       const box = h('div');
-      mount(content, h('button.why', { onclick: () => offSearch(query.trim(), box) }, `▦ Chercher « ${query.trim()} » dans Open Food Facts (produits de marque)`), box);
+      mount(content, h('button.why.row', { onclick: () => offSearch(query.trim(), box) }, icon('search'), `Chercher « ${query.trim()} » dans Open Food Facts (produits de marque)`), box);
     }
   }
   function allDishes() { clear(content); mount(content, h('div.section-title', 'Tous mes plats'), dishes.map(dishRow)); }
@@ -383,7 +383,7 @@ async function entrySheet(e) {
       } }, `×${String(k).replace('.', ',')}`)))),
     h('div.list', e.items.map((i) => h('div.list-item', h('span.grow', i.name, h('br'), h('span.small.muted', i.label)), h('span.small.muted', `${fmt.int(i.kcal)} kcal · ${fmt.int(i.p)} g`)))),
     h('div.btn-row',
-      h('button.btn', { onclick: async () => { try { await db.put('favorites', { name: e.name, items: e.items, total: e.total, portions: 1, photoId: e.photoId, slots: [e.slot], uses: 1, created: Date.now(), dish: true }); toast('Ajouté à Mes plats'); close(); } catch {} } }, '★ Mes plats'),
+      h('button.btn', { onclick: async () => { try { await db.put('favorites', { name: e.name, items: e.items, total: e.total, portions: 1, photoId: e.photoId, slots: [e.slot], uses: 1, created: Date.now(), dish: true }); toast('Ajouté à Mes plats'); close(); } catch {} } }, icon('star'), 'Mes plats'),
       h('button.btn', { onclick: async () => {
         const f = await pickImage(); if (!f) return;
         try { const blob = await resizeImage(f); const pid = await db.put('photos', { blob, date: e.date, ts: Date.now() }); await db.put('meals', { ...e, photoId: pid }); close(); refresh(); } catch (er) { toast(`Photo non enregistrée : ${er.message}`); }

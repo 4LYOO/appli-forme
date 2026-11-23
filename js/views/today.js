@@ -120,7 +120,7 @@ const short = (s, n = 24) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 function ring(value, target, label, unit) {
   const R = 27, C = 2 * Math.PI * R, pct = target ? Math.min(1, value / target) : 0;
   return h('div.ring-box',
-    h('div.ring', { html: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${R}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="7"/><circle cx="32" cy="32" r="${R}" fill="none" stroke="url(#g${label})" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C * pct} ${C}"/><defs><linearGradient id="g${label}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7af2e7"/><stop offset="1" stop-color="#19b8ab"/></linearGradient></defs></svg>` },
+    h('div.ring', { html: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${R}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="7"/><circle cx="32" cy="32" r="${R}" fill="none" stroke="url(#g${label})" stroke-width="7" stroke-linecap="${pct > 0 ? 'round' : 'butt'}" stroke-dasharray="${C * pct} ${C}"/><defs><linearGradient id="g${label}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7af2e7"/><stop offset="1" stop-color="#19b8ab"/></linearGradient></defs></svg>` },
       h('span.val', `${Math.round(pct * 100)}%`)),
     h('div', h('div.ring-label', label), h('div.ring-num', fmt.int(value), h('small', ` / ${fmt.int(target)}${unit}`))));
 }
@@ -146,7 +146,7 @@ function planCard(P, date) {
       h('div.pick-main', h('div.pick-sub', `${slotById(s.slot).time.replace(':', 'h')} · ${slotById(s.slot).short}`),
         h('div.pick-name', s.option.name), h('div.pick-sub', `${fmt.int(s.option.kcal)} kcal · ${fmt.int(s.option.p)} g${s.option.habit ? ' · tu le manges souvent' : ''}`)),
       h('button.icon-btn', { 'aria-label': `Noter ${s.option.name}`, onclick: async () => { await logOption(date, s.slot, s.option); refresh(); } }, icon('check'))))),
-    h('p.small.muted', { style: { marginTop: '8px' } }, `Total ≈ ${fmt.int(tot)} kcal et ${fmt.int(totP)} g pour ${fmt.int(goal)} kcal restants. Touche ✓ quand c'est mangé.`));
+    h('p.small.muted', { style: { marginTop: '8px' } }, `Total ≈ ${fmt.int(tot)} kcal et ${fmt.int(totP)} g pour ${fmt.int(goal)} kcal restants. Touche la coche quand c'est mangé.`));
 }
 
 // ---------- Créneaux souvent sautés ----------
@@ -191,7 +191,7 @@ async function scoreRow(date, c, night) {
   const R = 21, C = 2 * Math.PI * R;
   const session = weekday(date) === 6 ? 'A' : weekday(date) === 0 ? 'B' : 'M';
   let action = null;
-  if (todayWk) action = h('span.small.accent', 'Séance faite ✓');
+  if (todayWk) action = h('span.small.accent.row', icon('check'), 'Séance faite');
   else if (['complete', 'allegee', 'mini'].includes(rec.level)) action = h('button.btn.btn-sm.btn-primary', { onclick: (e) => { e.stopPropagation(); go('seance', { start: session, mode: rec.level }); } }, 'Démarrer');
   else if (rec.level === 'mobilite') action = h('button.btn.btn-sm', { onclick: (e) => { e.stopPropagation(); go('seance', { start: 'mobilite' }); } }, '10 min');
   return h('div.card',

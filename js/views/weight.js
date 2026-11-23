@@ -30,7 +30,7 @@ export async function render(root, params) {
 
   mount(root, 
     h('div.page-head', h('div', h('h1', 'Poids'), h('div.sub', 'Pèse-toi au réveil, après les toilettes'))),
-    h('div.card#saisie', h('div.card-head', h('h2', todayEntry ? 'Pesée du jour ✓' : 'Pesée du jour')), input,
+    h('div.card#saisie', h('div.card-head', h('h2', todayEntry ? 'Pesée du jour : notée' : 'Pesée du jour')), input,
       h('div', { style: { marginTop: '10px' } }, h('button.btn.btn-primary', { onclick: save }, todayEntry ? 'Corriger' : 'Enregistrer'))),
   );
 
@@ -156,7 +156,7 @@ function measureSheet(prev) {
     const photoBtn = (key, label) => {
       const b = h('button.btn', { onclick: async () => {
         const f = await pickImage(); if (!f) return;
-        try { const blob = await resizeImage(f); photos[key] = await db.put('photos', { blob, date: todayISO(), ts: Date.now(), kind: 'composition' }); b.textContent = `${label} ✓`; } catch (e) { toast(e.message); }
+        try { const blob = await resizeImage(f); photos[key] = await db.put('photos', { blob, date: todayISO(), ts: Date.now(), kind: 'composition' }); b.textContent = `${label} : prise`; } catch (e) { toast(e.message); }
       } }, label);
       return b;
     };

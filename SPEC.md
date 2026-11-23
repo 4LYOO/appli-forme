@@ -4,7 +4,7 @@
 > Ce document est la référence du projet. Il est tenu à jour à chaque phase.
 > En cas de conflit entre les chiffres de la section « Fonctionnalités » et ceux de la section « Exigence de qualité et base scientifique », **cette dernière prévaut** (voir aussi RECHERCHE.md).
 
-Statut : **v1.7 — Idées repas, Courses, pesées occasionnelles** (voir §10).
+Statut : **v1.8 — design verre renforcé, gestes, catalogue de courses par magasin** (voir §10).
 
 ---
 
@@ -143,6 +143,10 @@ Statut : **v1.7 — Idées repas, Courses, pesées occasionnelles** (voir §10).
 | D41 | **Idées repas** : 69 recettes végétariennes bon marché (15 petits-déj, 18 collations, 18 déjeuners à emporter, 18 dîners). Calories, protéines et **prix par portion calculés** (Ciqual + prix indicatifs). Filtres ≤ 10 min, petit prix, à emporter, sans cuisson, protéiné, pour plusieurs jours ; tri « Pour toi » (calories et protéines par euro, puis temps), moins cher, rapide, + kcal ; « Choisis pour moi » au hasard ; « Je le mange » (noté) ou « + Courses ». Catégorie par défaut selon l'heure. | Demande de l'utilisateur. |
 | D42 | **Courses** : repas choisis → produits à acheter arrondis au conditionnement (un paquet entamé couvre d'abord le panier de base, dépassement ≤ 15 % toléré), regroupés par rayon, cochables, « déjà à la maison » (non compté), prix modifiables (gardés pour la suite), produits ajoutés à la main, budget hebdomadaire, part des besoins caloriques de la semaine couverte, partage de la liste, « panier de base petit budget » (≈ 31 € pour ≈ 2 870 kcal et 125 g de protéines par jour), produits les plus rentables (kcal et protéines par euro), et une fiche « Aides alimentaires ». Prix indicatifs d'enseignes discount, fin 2026. | Petit budget, prise de masse. |
 | D43 | **Sans balance** : si moins de 8 pesées sur 28 jours, la dépense est estimée sur 6 semaines avec des pesées occasionnelles (≥ 3 pesées sur ≥ 21 jours), confiance plafonnée (jamais « bonne »). Simulation : une pesée par semaine → estimation plus lente (−10 % après 8 semaines au lieu de −3 %). Carte « Pas de balance ? » dans Poids (pharmacie, salle, proche ; mêmes conditions ; mètre ruban). | Pas de balance pour l'instant. |
+| D44 | **Design v1.8** : verre plus marqué (flou du fond sur les cartes, reflet en haut à gauche, liserés lumineux haut/bas), profondeur par ombres en couches, fond aux halos plus présents, boutons en relief, barre d'onglets en verre épais avec **indicateur qui glisse**. Plus aucun emoji : icônes au trait uniformes (filtres, alertes, code-barres, maison, dé…). | « Plus sobre, professionnel, soigné, avec de la profondeur. » |
+| D45 | **Gestes** : glisser horizontalement sur l'écran passe à l'onglet voisin (ignoré sur les zones qui défilent horizontalement : filtres, segments, courbe, champs) ; glisser le doigt le long de la barre déplace l'indicateur, l'onglet s'ouvre au relâchement ; transition glissée. | Demande de l'utilisateur. |
+| D46 | **Idées : 100 recettes** (22 petits-déj, 25 collations, 26 déjeuners, 27 dîners). Prix par portion selon le magasin choisi. | Demande de l'utilisateur. |
+| D47 | **Courses v2** : résumé (total, anneau « part des besoins », budget), tuiles « Ajouter des produits » / « Ajouter des repas », lignes avec rond à cocher, quantité −/+, « J'en ai », prix modifiable ; **catalogue de 177 produits** à cocher par rayon avec recherche et ajout libre ; **choix du magasin** (E.Leclerc, Carrefour, Intermarché, Super U, Auchan, Lidl, Aldi) : niveau de prix relatif estimé, gamme premier prix indiquée (Eco+, Simpl, Top Budget, Bien vu), quelques produits rares masqués chez les discounters. L'assortiment réel de chaque magasin n'est pas connu : c'est une approximation, signalée. | « Trop brut » ; sélection simple des produits ; tri par magasin. |
 | D14 | Écriture IndexedDB **vérifiée** (transaction `oncomplete`), bandeau d'erreur rouge persistant sinon ; vérification au démarrage que le stockage est persistant, avec avertissement si refusé (sur iOS, l'installation sur l'écran d'accueil est nécessaire). | « Aucune perte silencieuse ». |
 
 ## 9. Points ouverts
@@ -161,4 +165,5 @@ Statut : **v1.7 — Idées repas, Courses, pesées occasionnelles** (voir §10).
 | 1.5 | Retrait de la reconnaissance IA (payante) ; recherche gratuite par nom dans Open Food Facts | ✅ |
 | 1.6 | Valeurs Ciqual 2020 pour 123 aliments | ✅ |
 | 1.7 | Onglets Idées repas et Courses, bulle réglages, pesées occasionnelles | ✅ |
+| 1.8 | Verre renforcé et profondeur, gestes, icônes sans emoji, 100 recettes, Courses v2 avec catalogue et magasins | ✅ |
 | 3 | Corrélations personnelles, horaires de rappel adaptés, Web Push (Cloudflare Workers) | à faire |

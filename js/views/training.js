@@ -306,7 +306,7 @@ function mobility(root) {
   function next() {
     i++;
     list.querySelectorAll('.list-item').forEach((el) => (el.style.background = +el.dataset.k === i ? 'var(--accent-dim)' : ''));
-    if (i >= MOBILITY.length) { clearInterval(iv); label.textContent = 'Terminé, bravo !'; now.textContent = '✓'; beep(); startBtn.classList.add('hidden'); return; }
+    if (i >= MOBILITY.length) { clearInterval(iv); label.textContent = 'Terminé, bravo !'; now.textContent = 'OK'; beep(); startBtn.classList.add('hidden'); return; }
     label.textContent = MOBILITY[i].name; end = Date.now() + MOBILITY[i].sec * 1000; beep(0.08);
     startBtn.textContent = 'Passer'; clearInterval(iv);
     iv = setInterval(() => { const s = Math.max(0, Math.ceil((end - Date.now()) / 1000)); now.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; if (!s) next(); }, 250);

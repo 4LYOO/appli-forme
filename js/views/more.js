@@ -44,7 +44,7 @@ export async function render(root, params) {
 
     h('div.section-title', 'Stockage'),
     h('div.card.stack-sm',
-      h('p', persist?.persisted ? '✓ Stockage persistant accordé : iOS ne doit pas effacer tes données.' : 'Stockage persistant non accordé : la sauvegarde hebdomadaire est d\'autant plus importante.'),
+      h('p', persist?.persisted ? 'Stockage persistant accordé : iOS ne doit pas effacer tes données.' : 'Stockage persistant non accordé : la sauvegarde hebdomadaire est d\'autant plus importante.'),
       persist?.usage?.usage != null ? h('p.small.muted', `Espace utilisé : ${(persist.usage.usage / 1e6).toFixed(1).replace('.', ',')} Mo`) : null,
       h('p.small.muted', 'Tes données restent uniquement sur cet iPhone, dans l\'appli installée (pas dans Safari).')),
     h('p.tiny.muted.center', { style: { marginTop: '24px' } }, `Forme v${APP_VERSION} `),
