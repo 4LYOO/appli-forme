@@ -31,7 +31,7 @@ test('répartition dynamique du reste de la journée', () => {
   assert.deepEqual(plan.map((x) => x.id), ['c16', 'diner', 'coucher']);
   const k = plan.reduce((t, x) => t + x.kcal, 0);
   assert.ok(Math.abs(k - 2190) <= 20, `reste réparti ${k}`);
-  assert.ok(plan.find((x) => x.id === 'diner').kcal > 1000); // le dîner absorbe le petit-déj sauté
+  const dn = plan.find((x) => x.id === 'diner').kcal; assert.ok(dn > 800 && dn <= 1000, 'dîner ' + dn); // absorbe le petit-déj sauté, sans dépasser 1000
   // 15h40, déjeuner pas encore noté : il reste « à faire » (probablement mangé, pas noté)
   const p2 = remainingPlan({ target: { kcal: 2890, protein: 116 }, eaten: { petitdej: { kcal: 600, p: 22 } }, nowMin: 15 * 60 + 40, shares });
   assert.deepEqual(p2.map((x) => x.id), ['midi', 'c16', 'diner', 'coucher']);
@@ -54,4 +54,11 @@ test('mini-séance sur les muscles en retard', () => {
   const b = catchUpBlocks({ volume: { pecs: 9, dos: 4, quadriceps: 3, ischios: 9, epaules: 2 }, targets: { pecs: 10, dos: 10, quadriceps: 10, ischios: 10, epaules: 10 }, pool });
   assert.deepEqual(b.map((x) => x.ex), ['pike', 'squat', 'rowing']);
   assert.equal(catchUpBlocks({ volume: {}, targets: { pecs: 10 }, pool, weekendMissed: true })[0].sets, 3);
+});
+
+test('plan du soir plafonné : pas de dîner à 1 270 kcal', () => {
+  const plan = remainingPlan({ target: { kcal: 3140, protein: 116 }, eaten: { petitdej: { kcal: 262, p: 6 }, midi: { kcal: 1006, p: 47 }, c16: { kcal: 95, p: 3 } }, nowMin: 20 * 60 });
+  const d = plan.find((x) => x.id === 'diner'), c = plan.find((x) => x.id === 'coucher');
+  assert.ok(d.kcal <= 1000 && c.kcal <= 700, JSON.stringify(plan));
+  assert.equal(d.kcal + c.kcal + plan.overflow, 1780);
 });

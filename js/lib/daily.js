@@ -76,10 +76,33 @@ export function remainingPlan({ target, eaten, nowMin, shares }) {
   };
   const left = SLOTS.filter((s) => !done.has(s.id) && pending(s));
   const leftK = Math.max(0, target.kcal - totK), leftP = Math.max(0, target.protein - totP);
-  const sk = left.reduce((t, s) => t + (shares?.[s.id] ?? s.share), 0);
   const sp = left.reduce((t, s) => t + s.pshare, 0);
-  return left.map((s) => ({ id: s.id, kcal: sk ? r10((leftK * (shares?.[s.id] ?? s.share)) / sk) : 0, p: sp ? Math.round((leftP * s.pshare) / sp) : 0 }));
+  // Répartition au prorata, mais aucune prise au-delà d'un volume réaliste (SLOT_MAX) : le surplus passe sur les
+  // autres prises restantes ; ce qui ne rentre nulle part est rendu dans `overflow` (à boire : lait, smoothie).
+  const kc = {};
+  let rest = leftK, open = [...left];
+  while (rest > 1 && open.length) {
+    const sk = open.reduce((t, s) => t + (shares?.[s.id] ?? s.share), 0);
+    const capped = [];
+    let used = 0;
+    for (const s of open) {
+      const want = (rest * (shares?.[s.id] ?? s.share)) / sk;
+      const room = SLOT_MAX[s.id] - (kc[s.id] || 0);
+      const give = Math.min(want, room);
+      kc[s.id] = (kc[s.id] || 0) + give; used += give;
+      if (give >= room - 0.5) capped.push(s.id);
+    }
+    rest -= used;
+    if (!capped.length) break;
+    open = open.filter((s) => !capped.includes(s.id));
+  }
+  const out = left.map((s) => ({ id: s.id, kcal: r10(kc[s.id] || 0), p: sp ? Math.round((leftP * s.pshare) / sp) : 0 }));
+  out.overflow = rest > 1 ? r10(rest) : 0;
+  return out;
 }
+
+/** Calories maximales réalistes par prise (au-delà, l'appétit ne suit pas et le repas est sauté ou laissé). */
+export const SLOT_MAX = { petitdej: 900, c10: 550, midi: 1000, c16: 550, diner: 1000, coucher: 700 };
 
 /**
  * Plan de fin de journée : pour chaque prise restante, choisit une option parmi les candidates (plats de

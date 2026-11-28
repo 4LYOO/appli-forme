@@ -154,6 +154,7 @@ async function hero(day, t, checkin, night, date, P) {
     h('div.eyebrow', `Maintenant · ${s.time.replace(':', 'h')}`),
     h('div.title', s.label),
     h('div.subtitle', `Vise ≈ ${fmt.int(st.kcal)} kcal et ${st.protein} g de protéines`),
+    P.plan.overflow >= 120 ? h('div.small.accent', { style: { marginTop: '4px' } }, `+ ≈ ${fmt.int(P.plan.overflow)} kcal à boire dans la soirée (grand verre de lait, smoothie) : un repas plus gros ne passerait pas.`) : null,
     h('div.actions',
       h('button.btn.btn-primary', { onclick: () => openAdd({ date: day.date, slot: sid, photo: true }) }, icon('camera'), 'Photo'),
       h('button.btn', { onclick: () => openAdd({ date: day.date, slot: sid }) }, icon('plus'), 'Ajouter')),
@@ -179,9 +180,9 @@ function rings(day, t) {
   return h('div.card',
     h('div.rings', ring(day.totals.kcal, t.kcal, 'Calories', ''), ring(day.totals.p, t.protein, 'Protéines', ' g')),
     h('div.row.between', { style: { marginTop: '10px' } },
-      h('span.small.muted', left > 0 || leftP > 0 ? `Reste ${fmt.int(left)} kcal · ${fmt.int(leftP)} g` : 'Objectifs atteints'),
-      why(['surplus', 'proteines'])),
-    t.carry ? h('div.row.between', { style: { marginTop: '4px' } }, h('span.small.accent', `Dont +${t.carry} kcal de rattrapage d'hier`), why('rattrapage')) : null);
+      h('span.small.muted', left > 0 || leftP > 0 ? `Reste ${fmt.int(left)} kcal · ${fmt.int(leftP)} g` : 'Objectifs atteints',
+        t.carry ? h('span.accent', ` · dont +${t.carry} rattrapage d'hier`) : null),
+      why(t.carry ? ['surplus', 'proteines', 'rattrapage'] : ['surplus', 'proteines'])));
 }
 
 // ---------- Plan pour finir la journée ----------

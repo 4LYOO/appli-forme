@@ -6,7 +6,7 @@ import { ICONS, icon } from './icons.js';
 
 document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = ICONS[el.dataset.icon]; });
 
-export const APP_VERSION = '1.10.0';
+export const APP_VERSION = '1.11.0';
 
 const VIEWS = {
   aujourdhui: () => import('./views/today.js'),
@@ -175,7 +175,7 @@ function placeIndicator(el) {
   indicator.style.transform = `translateX(${el.offsetLeft}px)`;
 }
 export function syncIndicator() { placeIndicator(tabbar.querySelector('a.on')); }
-new MutationObserver(syncIndicator).observe(tabbar, { subtree: true, attributes: true, attributeFilter: ['class'] });
+new MutationObserver((ms) => { if (!tabbar.classList.contains('dragging') && ms.some((m) => m.target.tagName === 'A')) syncIndicator(); }).observe(tabbar, { subtree: true, attributes: true, attributeFilter: ['class'] });
 window.addEventListener('resize', syncIndicator);
 requestAnimationFrame(syncIndicator);
 
@@ -242,6 +242,26 @@ view.addEventListener('touchend', () => {
   }
 });
 view.addEventListener('touchcancel', () => { mode = null; view.style.transform = ''; view.style.opacity = ''; document.body.classList.remove('swiping'); });
+
+// 0) Barre compacte en faisant défiler vers le bas, normale en remontant (comme les barres iOS 26)
+let lastY = window.scrollY, miniRaf = 0;
+function setMini(on) { tabbar.classList.toggle('mini', on); }
+window.addEventListener('scroll', () => {
+  if (miniRaf) return;
+  miniRaf = requestAnimationFrame(() => {
+    miniRaf = 0;
+    const y = window.scrollY, dy = y - lastY;
+    if (y < 40 || dy < -8) setMini(false);
+    else if (dy > 8 && y > 120) setMini(true);
+    if (Math.abs(dy) > 8 || y < 40) lastY = y;
+  });
+}, { passive: true });
+tabbar.addEventListener('touchstart', () => setMini(false), { passive: true });
+window.addEventListener('popstate', () => setMini(false));
+new MutationObserver(() => setMini(false)).observe(document.getElementById('view'), { childList: true });
+// L'indicateur suit la taille de la barre pendant la transition compacte/normale
+let rzT = 0;
+new ResizeObserver(() => { if (tabbar.classList.contains('dragging')) return; tabbar.classList.add('resizing'); syncIndicator(); clearTimeout(rzT); rzT = setTimeout(() => tabbar.classList.remove('resizing'), 80); }).observe(tabbar);
 
 // 2) Glisser le doigt le long de la barre : l'indicateur suit, l'onglet s'ouvre au relâchement
 let barTarget = null;

@@ -503,3 +503,57 @@ body.swiping .card, body.swiping .list, body.swiping .slot, body.swiping .action
 .cap-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; margin-bottom: 6px; }
 .cap-bar > div { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #2bb8ab, var(--accent)); box-shadow: 0 0 10px rgba(62,224,208,.45); }
 .cap-steps { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- v1.11 : petits correctifs ---------- */
+.ring-num { white-space: nowrap; }
+.ring-num small { white-space: nowrap; }
+@media (max-width: 400px) { .ring-num { font-size: 18px; } .ring-wrap, .ring { width: 60px; height: 60px; } }
+.quick-repeat { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 40px; }
+.quick-repeat button { max-width: 78vw; }
+.quick-repeat button span, .quick-repeat button { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+details > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::after { content: ''; flex: none; width: 9px; height: 9px; margin-right: 4px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translate(-2px, -2px); transition: transform .25s; }
+details[open] > summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+
+/* ---------- v1.11 : barre d'onglets façon iOS 26 (Liquid Glass) ----------
+   Capsule flottante très transparente : flou léger + saturation (le contenu reste lisible derrière),
+   liseré spéculaire en dégradé, sélection = pastille de verre clair (pas de couleur pleine),
+   la pastille grossit comme une lentille sous le doigt, la barre se compacte quand on fait défiler vers le bas. */
+:root { --tabbar-h: 62px; }
+body::after { content: ''; position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--safe-bottom) + 96px); z-index: 19; pointer-events: none;
+  background: linear-gradient(180deg, rgba(6,9,12,0), rgba(6,9,12,0.55) 60%, rgba(6,9,12,0.8)); }
+#tabbar {
+  left: calc(var(--safe-left) + 18px); right: calc(var(--safe-right) + 18px); bottom: max(calc(var(--safe-bottom) - 6px), 12px);
+  height: var(--tabbar-h); padding: 4px; border-radius: 999px; border: 0; overflow: visible;
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)), rgba(16,20,24,0.32);
+  -webkit-backdrop-filter: blur(14px) saturate(200%) brightness(1.08); backdrop-filter: blur(14px) saturate(200%) brightness(1.08);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(255,255,255,0.08), inset 0 0 12px rgba(255,255,255,0.04),
+    0 10px 30px -6px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.3);
+  transition: height .35s cubic-bezier(.2,.9,.25,1), bottom .35s cubic-bezier(.2,.9,.25,1), left .35s cubic-bezier(.2,.9,.25,1), right .35s cubic-bezier(.2,.9,.25,1);
+}
+#tabbar::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background: linear-gradient(125deg, rgba(255,255,255,0.65), rgba(255,255,255,0.08) 28%, rgba(255,255,255,0) 55%, rgba(255,255,255,0.10) 78%, rgba(255,255,255,0.45));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+#tabbar::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background: radial-gradient(90% 70% at 50% -25%, rgba(255,255,255,0.14), transparent 60%); }
+#tabbar a { color: rgba(236,242,246,0.88); font-size: 10px; font-weight: 600; gap: 2px; border-radius: 999px; -webkit-tap-highlight-color: transparent; }
+#tabbar a .tab-ico { width: 25px; height: 25px; transition: transform .3s cubic-bezier(.3,1.4,.5,1); }
+#tabbar a span:last-child { transition: opacity .2s, max-height .3s; max-height: 14px; overflow: hidden; }
+#tabbar a.on { color: var(--accent); }
+#tabbar a:active .tab-ico { transform: scale(0.9); }
+#tab-indicator { top: 4px; bottom: 4px; border-radius: 999px; border: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+  box-shadow: inset 0 1px 0.5px rgba(255,255,255,0.35), inset 0 -0.5px 0.5px rgba(255,255,255,0.12), 0 2px 8px rgba(0,0,0,0.18);
+  transition: transform .5s cubic-bezier(.3,1.25,.45,1), width .35s cubic-bezier(.3,1.25,.45,1), scale .25s ease, background .25s, box-shadow .25s; }
+/* Sous le doigt : la pastille devient une lentille plus grande et plus claire */
+#tabbar.dragging #tab-indicator { scale: 1.12 1.22; transition: transform .16s ease-out, width .16s, scale .25s cubic-bezier(.3,1.4,.5,1);
+  background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06));
+  box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.5), inset 0 1px 1px rgba(255,255,255,0.5), 0 8px 22px rgba(0,0,0,0.35); }
+/* Compacte au défilement vers le bas : plus basse, sans libellés */
+#tabbar.mini { height: 50px; bottom: max(calc(var(--safe-bottom) - 10px), 8px); left: calc(var(--safe-left) + 42px); right: calc(var(--safe-right) + 42px); }
+#tabbar.mini a span:last-child { opacity: 0; max-height: 0; }
+#tabbar.mini a .tab-ico { width: 23px; height: 23px; }
+@media (prefers-reduced-transparency: reduce) { #tabbar { background: rgba(22,27,32,0.96); } }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { #tabbar { background: rgba(22,27,32,0.96); } }
+#tabbar.resizing #tab-indicator { transition: none; }

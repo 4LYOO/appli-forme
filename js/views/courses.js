@@ -69,7 +69,7 @@ export async function render(root) {
   const hasBasket = BASIC_BASKET.every(([id]) => (plan.extras[id] || 0) > 0);
   const basket = h('div.card', { style: { marginTop: '12px' } },
     h('div.row', h('span.tile-ico', icon('leaf')),
-      h('div.grow', h('div', { style: { fontWeight: 650 } }, 'Panier de base petit budget'), h('div.small.muted', `${BASIC_BASKET.length} produits · ≈ ${euros(basketCost)} · ≈ 2 900 kcal/j`)),
+      h('div.grow', h('div', { style: { fontWeight: 650 } }, 'Panier de base petit budget'), h('div.small.muted', `${BASIC_BASKET.length} produits · ≈ ${euros(basketCost)} · ≈ 2\u202F900 kcal/j`)),
       hasBasket ? h('button.btn.btn-sm', { onclick: () => update((p) => { for (const [id] of BASIC_BASKET) delete p.extras[id]; }) }, 'Retirer')
         : h('button.btn.btn-sm.btn-primary', { onclick: () => update((p) => { for (const [id, n] of BASIC_BASKET) p.extras[id] = Math.max(p.extras[id] || 0, n); }) }, 'Ajouter')),
     why('budget'));
